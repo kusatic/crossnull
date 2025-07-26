@@ -1,226 +1,247 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>Крестики-Нолики против Непобедимого Бота</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Крестики-нолики</title>
   <style>
-  body {
-    background-color: #0d1117; /* фон как у GitHub Dark */
-    color: #c9d1d9;            /* текст как на GitHub */
-    font-family: 'Segoe UI', sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-  }
+    body {
+      background-color: #0d1117;
+      color: #c9d1d9;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
 
-  #game {
-    text-align: center;
-    background-color: #161b22;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
-  }
+    #game {
+      background-color: #161b22;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+      text-align: center;
+    }
 
-  table {
-    margin: 20px auto;
-    border-collapse: collapse;
-  }
+    h1 {
+      color: #f0f6fc;
+      margin-bottom: 10px;
+    }
 
-  td {
-    width: 80px;
-    height: 80px;
-    font-size: 40px;
-    border: 1px solid #30363d;
-    text-align: center;
-    vertical-align: middle;
-    cursor: pointer;
-    background-color: #0d1117;
-    color: #c9d1d9;
-    transition: background-color 0.2s;
-  }
+    table {
+      margin: 20px auto;
+      border-collapse: collapse;
+    }
 
-  td:hover {
-    background-color: #21262d;
-  }
+    td {
+      width: 80px;
+      height: 80px;
+      font-size: 40px;
+      border: 1px solid #30363d;
+      text-align: center;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #0d1117;
+      color: #c9d1d9;
+      transition: background-color 0.2s;
+    }
 
-  h1 {
-    margin-bottom: 10px;
-    color: #f0f6fc;
-  }
+    td:hover {
+      background-color: #21262d;
+    }
 
-  #status {
-    margin-top: 10px;
-    font-size: 18px;
-    color: #8b949e;
-  }
-</style>
+    #status {
+      margin-top: 10px;
+      font-size: 18px;
+      color: #8b949e;
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      background-color: #238636;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #2ea043;
+    }
+
+    #scoreboard {
+      margin-top: 20px;
+      font-size: 16px;
+      color: #c9d1d9;
+    }
+  </style>
 </head>
 <body>
+  <div id="game">
+    <h1>Крестики-нолики</h1>
+    <table id="board"></table>
+    <div id="status"></div>
+    <button onclick="startGame()">Новая игра</button>
+    <div id="scoreboard">
+      👤 Вы: <span id="wins">0</span> |
+      🤖 Бот: <span id="losses">0</span> |
+      🤝 Ничья: <span id="draws">0</span>
+    </div>
+  </div>
 
-<h1>Крестики-Нолики</h1>
-<p>Ты — X, Бот — O</p>
+  <script>
+    let board = [];
+    const human = 'X';
+    const ai = 'O';
+    let gameOver = false;
 
-<table id="board"></table>
+    let wins = 0;
+    let losses = 0;
+    let draws = 0;
 
-<div id="status">Твой ход!</div>
-
-<div id="scoreboard">
-  👤 Ты: <span id="playerScore">0</span> | 
-  🤖 Бот: <span id="botScore">0</span> | 
-  😐 Ничьих: <span id="draws">0</span>
-</div>
-
-<button id="restart">Новая игра</button>
-
-<script>
-  const boardElement = document.getElementById('board');
-  const statusElement = document.getElementById('status');
-  const restartButton = document.getElementById('restart');
-
-  let board = Array(9).fill(null);
-  let playerScore = 0;
-  let botScore = 0;
-  let drawScore = 0;
-
-  const playerScoreEl = document.getElementById('playerScore');
-  const botScoreEl = document.getElementById('botScore');
-  const drawScoreEl = document.getElementById('draws');
-
-  restartButton.addEventListener('click', resetGame);
-
-  function renderBoard() {
-    boardElement.innerHTML = '';
-    for (let i = 0; i < 3; i++) {
-      const row = document.createElement('tr');
-      for (let j = 0; j < 3; j++) {
-        const cell = document.createElement('td');
-        const index = i * 3 + j;
-        cell.textContent = board[index] || '';
-        cell.addEventListener('click', () => playerMove(index));
-        row.appendChild(cell);
-      }
-      boardElement.appendChild(row);
+    function updateScoreboard() {
+      document.getElementById('wins').textContent = wins;
+      document.getElementById('losses').textContent = losses;
+      document.getElementById('draws').textContent = draws;
     }
-  }
 
-  function playerMove(index) {
-    if (board[index] || checkWinner(board) || isDraw(board)) return;
-    board[index] = 'X';
-    renderBoard();
-    updateStatus();
-
-    if (!checkWinner(board) && !isDraw(board)) {
-      setTimeout(botMove, 200); // небольшая задержка для реализма
-    }
-  }
-
-  function botMove() {
-    const bestMove = getBestMove(board);
-    if (bestMove !== -1) {
-      board[bestMove] = 'O';
-      renderBoard();
-    }
-    updateStatus();
-  }
-
-  function getBestMove(newBoard) {
-    let bestScore = -Infinity;
-    let move = -1;
-    for (let i = 0; i < newBoard.length; i++) {
-      if (!newBoard[i]) {
-        newBoard[i] = 'O';
-        let score = minimax(newBoard, 0, false);
-        newBoard[i] = null;
-        if (score > bestScore) {
-          bestScore = score;
-          move = i;
+    function createBoard() {
+      const table = document.getElementById('board');
+      table.innerHTML = '';
+      board = [];
+      for (let i = 0; i < 3; i++) {
+        const row = [];
+        const tr = document.createElement('tr');
+        for (let j = 0; j < 3; j++) {
+          const td = document.createElement('td');
+          td.addEventListener('click', () => playerMove(i, j));
+          tr.appendChild(td);
+          row.push('');
         }
+        table.appendChild(tr);
+        board.push(row);
       }
+      setStatus("Ваш ход (X)");
+      gameOver = false;
     }
-    return move;
-  }
 
-  function minimax(boardState, depth, isMaximizing) {
-    const winner = checkWinner(boardState);
-    if (winner === 'O') return 10 - depth;
-    if (winner === 'X') return depth - 10;
-    if (isDraw(boardState)) return 0;
-
-    if (isMaximizing) {
-      let bestScore = -Infinity;
-      for (let i = 0; i < boardState.length; i++) {
-        if (!boardState[i]) {
-          boardState[i] = 'O';
-          let score = minimax(boardState, depth + 1, false);
-          boardState[i] = null;
-          bestScore = Math.max(score, bestScore);
-        }
-      }
-      return bestScore;
-    } else {
-      let bestScore = Infinity;
-      for (let i = 0; i < boardState.length; i++) {
-        if (!boardState[i]) {
-          boardState[i] = 'X';
-          let score = minimax(boardState, depth + 1, true);
-          boardState[i] = null;
-          bestScore = Math.min(score, bestScore);
-        }
-      }
-      return bestScore;
+    function setStatus(msg) {
+      document.getElementById('status').textContent = msg;
     }
-  }
 
-  function checkWinner(b) {
-    const wins = [
-      [0,1,2], [3,4,5], [6,7,8],
-      [0,3,6], [1,4,7], [2,5,8],
-      [0,4,8], [2,4,6]
-    ];
-    for (let [a, b1, c] of wins) {
-      if (b[a] && b[a] === b[b1] && b[a] === b[c]) return b[a];
-    }
-    return null;
-  }
-
-  function isDraw(b) {
-    return b.every(cell => cell) && !checkWinner(b);
-  }
-
-  function updateStatus() {
-    const winner = checkWinner(board);
-    if (winner) {
-      if (winner === 'X') {
-        statusElement.textContent = 'Ты победил! Как?!';
-        playerScore++;
+    function playerMove(i, j) {
+      if (board[i][j] || gameOver) return;
+      board[i][j] = human;
+      updateBoard();
+      if (checkWinner(human)) {
+        setStatus("Вы победили! 🎉");
+        wins++;
+        gameOver = true;
+        updateScoreboard();
+      } else if (isDraw()) {
+        setStatus("Ничья 🤝");
+        draws++;
+        gameOver = true;
+        updateScoreboard();
       } else {
-        statusElement.textContent = 'Бот победил! Было предсказуемо.';
-        botScore++;
+        setStatus("Ход бота (O)...");
+        setTimeout(botMove, 300);
       }
-    } else if (isDraw(board)) {
-      statusElement.textContent = 'Ничья. Почти победа!';
-      drawScore++;
-    } else {
-      statusElement.textContent = 'Твой ход!';
     }
 
-    // Обновляем счёт
-    playerScoreEl.textContent = playerScore;
-    botScoreEl.textContent = botScore;
-    drawScoreEl.textContent = drawScore;
-  }
+    function botMove() {
+      const best = minimax(board, ai);
+      board[best.i][best.j] = ai;
+      updateBoard();
+      if (checkWinner(ai)) {
+        setStatus("Бот победил! 🤖");
+        losses++;
+        gameOver = true;
+        updateScoreboard();
+      } else if (isDraw()) {
+        setStatus("Ничья 🤝");
+        draws++;
+        gameOver = true;
+        updateScoreboard();
+      } else {
+        setStatus("Ваш ход (X)");
+      }
+    }
 
-  function resetGame() {
-    board = Array(9).fill(null);
-    renderBoard();
-    updateStatus();
-  }
+    function updateBoard() {
+      const table = document.getElementById('board');
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+          table.rows[i].cells[j].textContent = board[i][j];
+        }
+      }
+    }
 
-  renderBoard();
-</script>
+    function isDraw() {
+      return board.flat().every(cell => cell);
+    }
 
+    function checkWinner(player) {
+      for (let i = 0; i < 3; i++) {
+        if (board[i][0] === player && board[i][1] === player && board[i][2] === player) return true;
+        if (board[0][i] === player && board[1][i] === player && board[2][i] === player) return true;
+      }
+      if (board[0][0] === player && board[1][1] === player && board[2][2] === player) return true;
+      if (board[0][2] === player && board[1][1] === player && board[2][0] === player) return true;
+      return false;
+    }
+
+    function minimax(newBoard, player) {
+      if (checkWinner(human)) return { score: -10 };
+      if (checkWinner(ai)) return { score: 10 };
+      if (isDraw()) return { score: 0 };
+
+      const moves = [];
+
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+          if (newBoard[i][j] === '') {
+            const move = { i, j };
+            newBoard[i][j] = player;
+            const result = minimax(newBoard, player === ai ? human : ai);
+            move.score = result.score;
+            newBoard[i][j] = '';
+            moves.push(move);
+          }
+        }
+      }
+
+      let bestMove;
+      if (player === ai) {
+        let bestScore = -Infinity;
+        for (let move of moves) {
+          if (move.score > bestScore) {
+            bestScore = move.score;
+            bestMove = move;
+          }
+        }
+      } else {
+        let bestScore = Infinity;
+        for (let move of moves) {
+          if (move.score < bestScore) {
+            bestScore = move.score;
+            bestMove = move;
+          }
+        }
+      }
+
+      return bestMove;
+    }
+
+    function startGame() {
+      createBoard();
+    }
+
+    startGame();
+    updateScoreboard();
+  </script>
 </body>
 </html>
-
