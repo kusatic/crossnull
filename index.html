@@ -22,6 +22,7 @@
       border-radius: 12px;
       box-shadow: 0 0 20px rgba(0,0,0,0.5);
       text-align: center;
+      max-width: 90vw;
     }
 
     h1 {
@@ -77,6 +78,12 @@
       font-size: 16px;
       color: #c9d1d9;
     }
+
+    #weather {
+      margin-top: 20px;
+      font-size: 14px;
+      color: #8b949e;
+    }
   </style>
 </head>
 <body>
@@ -90,6 +97,7 @@
       🤖 Бот: <span id="losses">0</span> |
       🤝 Ничья: <span id="draws">0</span>
     </div>
+    <div id="weather">Погода: загружается...</div>
   </div>
 
   <script>
@@ -240,8 +248,48 @@
       createBoard();
     }
 
+    async function fetchWeather() {
+      const weatherEl = document.getElementById('weather');
+      if (!navigator.geolocation) {
+        weatherEl.textContent = "Геолокация не поддерживается.";
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+
+        try {
+          const response = await fetch(
+            `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`
+          );
+          const data = await response.json();
+          const w = data.current_weather;
+
+          const icon = getWeatherEmoji(w.weathercode);
+          weatherEl.textContent = `Погода: ${Math.round(w.temperature)}°C, ${icon}, ветер ${w.windspeed} км/ч`;
+        } catch (e) {
+          weatherEl.textContent = "Не удалось получить погоду.";
+        }
+      }, () => {
+        weatherEl.textContent = "Разрешите доступ к геопозиции для отображения погоды.";
+      });
+    }
+
+    function getWeatherEmoji(code) {
+      if ([0].includes(code)) return "☀️";
+      if ([1, 2, 3].includes(code)) return "⛅";
+      if ([45, 48].includes(code)) return "🌫️";
+      if ([51, 53, 55, 61, 63, 65].includes(code)) return "🌧️";
+      if ([66, 67, 71, 73, 75, 77, 85, 86].includes(code)) return "❄️";
+      if ([80, 81, 82].includes(code)) return "🌦️";
+      if ([95, 96, 99].includes(code)) return "⛈️";
+      return "❔";
+    }
+
     startGame();
     updateScoreboard();
+    fetchWeather();
   </script>
 </body>
 </html>
