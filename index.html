@@ -2,116 +2,155 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Уничижитель</title>
   <style>
+    :root {
+      --cell-size: min(25vw, 100px);
+      --panel-width: min(90vw, 300px);
+      --gap-size: min(3vw, 15px);
+    }
+    
     body {
       background-color: #0d1117;
       color: #c9d1d9;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
         Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
       margin: 0;
-      padding: 20px;
+      padding: 10px;
+      box-sizing: border-box;
+      touch-action: manipulation;
     }
+    
     h1 {
       color: #58a6ff;
       text-align: center;
-      margin-bottom: 20px;
+      margin: 10px 0;
+      font-size: clamp(1.5rem, 5vw, 2rem);
     }
+    
     #container {
       display: flex;
-      justify-content: space-between;
-      gap: 20px;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--gap-size);
       max-width: 900px;
       margin: 0 auto;
     }
-    #statsAllPanel {
-      flex: 1 1 200px;
-      background: #161b22;
-      padding: 15px;
-      border-radius: 8px;
-      min-width: 200px;
-      height: fit-content;
-    }
-    #rightPanel {
-      flex: 1 1 250px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      min-width: 250px;
-    }
-    #loginPanel {
-      background: #161b22;
-      padding: 15px;
-      border-radius: 8px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    #authPanel {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      width: 100%;
-    }
-    #authPanel input,
-    #authPanel button {
-      width: 100%;
-      box-sizing: border-box;
-    }
-    #logoutBtn {
-      margin-top: 10px;
-      width: 100%;
-    }
-    #statsUserPanel {
-      background: #161b22;
-      padding: 15px;
-      border-radius: 8px;
-      min-height: 120px;
-    }
+    
     #gamePanel {
-      flex: 2 1 400px;
+      order: 2;
+      width: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
     }
+    
     #board {
       display: grid;
-      grid-template-columns: repeat(3, 100px);
-      gap: 5px;
-      margin-bottom: 15px;
+      grid-template-columns: repeat(3, var(--cell-size));
+      gap: var(--gap-size);
+      margin-bottom: var(--gap-size);
     }
+    
     .cell {
-      width: 100px;
-      height: 100px;
+      width: var(--cell-size);
+      height: var(--cell-size);
       background: #161b22;
       border: 1px solid #30363d;
-      font-size: 50px;
+      font-size: calc(var(--cell-size) * 0.5);
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
-    .cell:hover {
-      background: #21262d;
+    
+    #panelsWrapper {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: var(--gap-size);
+      order: 1;
     }
-    button,
-    input {
+    
+    .panel {
+      background: #161b22;
+      padding: 12px;
+      border-radius: 8px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    
+    #status {
+      font-size: clamp(1rem, 4vw, 1.2rem);
+      margin: var(--gap-size) 0;
+      text-align: center;
+      min-height: 1.5em;
+    }
+    
+    button, input {
       background: #21262d;
       color: white;
       border: 1px solid #30363d;
       border-radius: 5px;
-      font-size: 16px;
+      font-size: clamp(0.9rem, 3.5vw, 1rem);
       padding: 8px;
+      width: 100%;
+      box-sizing: border-box;
     }
-    button:hover {
+    
+    button:active {
       background: #30363d;
     }
-    #status {
-      font-size: 18px;
-      margin-bottom: 10px;
-      min-height: 24px;
+    
+    #authPanel {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    #user {
+      margin-top: 10px;
+      color: #58a6ff;
+      text-align: center;
+      word-break: break-all;
+      font-size: clamp(0.9rem, 3.5vw, 1rem);
+    }
+    
+    @media (min-width: 768px) {
+      #container {
+        flex-direction: row;
+        align-items: flex-start;
+      }
+      
+      #gamePanel {
+        flex: 2;
+        order: 2;
+      }
+      
+      #panelsWrapper {
+        flex: 1;
+        max-width: var(--panel-width);
+        order: 1;
+      }
+      
+      :root {
+        --cell-size: 100px;
+        --gap-size: 10px;
+      }
+    }
+    
+    /* Особые стили для очень маленьких экранов */
+    @media (max-width: 350px) {
+      :root {
+        --cell-size: 22vw;
+      }
+      
+      #authPanel {
+        gap: 6px;
+      }
     }
   </style>
 </head>
@@ -119,43 +158,33 @@
   <h1>Уничижитель</h1>
 
   <div id="container">
-    <div id="statsAllPanel">
-      <strong>Общая статистика:</strong>
-      <div id="statsAll">Загрузка...</div>
-    </div>
-
-    <div id="gamePanel">
-      <div id="board"></div>
-      <button id="newGameBtn">Новая игра</button>
-      <div id="status">Ваш ход</div>
-    </div>
-
-    <div id="rightPanel">
-      <div id="loginPanel">
+    <div id="panelsWrapper">
+      <div id="loginPanel" class="panel">
         <div id="authPanel">
-          <input
-            type="email"
-            id="email"
-            placeholder="Email"
-            autocomplete="username"
-          />
-          <input
-            type="password"
-            id="password"
-            placeholder="Пароль"
-            autocomplete="current-password"
-          />
+          <input type="email" id="email" placeholder="Email" autocomplete="username" />
+          <input type="password" id="password" placeholder="Пароль" autocomplete="current-password" />
           <button id="registerBtn">Регистрация</button>
           <button id="loginBtn">Вход</button>
         </div>
         <button id="logoutBtn" style="display: none">Выход</button>
-        <div id="user" style="margin-top: 15px; color: #58a6ff"></div>
+        <div id="user"></div>
       </div>
 
-      <div id="statsUserPanel">
+      <div id="statsUserPanel" class="panel">
         <strong>Ваша статистика:</strong>
         <div id="stats">Загрузка...</div>
       </div>
+
+      <div id="statsAllPanel" class="panel">
+        <strong>Общая статистика:</strong>
+        <div id="statsAll">Загрузка...</div>
+      </div>
+    </div>
+
+    <div id="gamePanel">
+      <div id="board"></div>
+      <div id="status">Ваш ход</div>
+      <button id="newGameBtn">Новая игра</button>
     </div>
   </div>
 
@@ -165,6 +194,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
   <script>
+    // ... (весь ваш JavaScript код остаётся без изменений) ...
     const firebaseConfig = {
       apiKey: "AIzaSyB44W1CnyyftFFxskgbhFvtCuOvBVN6Xyk",
       authDomain: "crossnull-cc1c8.firebaseapp.com",
@@ -354,27 +384,27 @@
 
     // Работа с Firebase статистикой
     function updateUserStats(field) {
-  if (!currentUser) return;
-  const statsRef = db.ref("users/" + currentUser.uid + "/stats");
-  statsRef.transaction((stats) => {
-    if (!stats) stats = { wins: 0, losses: 0, draws: 0 };
-    stats[field] = (stats[field] || 0) + 1;
-    stats.lastUpdated = firebase.database.ServerValue.TIMESTAMP;
-    return stats;
-  });
-}
+      if (!currentUser) return;
+      const statsRef = db.ref("users/" + currentUser.uid + "/stats");
+      statsRef.transaction((stats) => {
+        if (!stats) stats = { wins: 0, losses: 0, draws: 0 };
+        stats[field] = (stats[field] || 0) + 1;
+        stats.lastUpdated = firebase.database.ServerValue.TIMESTAMP;
+        return stats;
+      });
+    }
 
     function updateGlobalStats(field) {
-  const globalRef = db.ref("globalStats");
-  globalRef.transaction((stats) => {
-    if (!stats) stats = { wins: 0, losses: 0, draws: 0 };
-    stats[field] = (stats[field] || 0) + 1;
-    stats.lastUpdated = firebase.database.ServerValue.TIMESTAMP;
-    return stats;
-  }, (error) => {
-    if (error) console.error("Ошибка обновления globalStats:", error);
-  });
-}
+      const globalRef = db.ref("globalStats");
+      globalRef.transaction((stats) => {
+        if (!stats) stats = { wins: 0, losses: 0, draws: 0 };
+        stats[field] = (stats[field] || 0) + 1;
+        stats.lastUpdated = firebase.database.ServerValue.TIMESTAMP;
+        return stats;
+      }, (error) => {
+        if (error) console.error("Ошибка обновления globalStats:", error);
+      });
+    }
 
     function displayStats(userStats, globalStats) {
       if (userStats) {
