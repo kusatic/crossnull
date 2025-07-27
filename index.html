@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Уничижитель</title>
   <style>
     body {
@@ -113,6 +113,10 @@
       margin-bottom: 10px;
       min-height: 24px;
     }
+    #resetStatsBtn {
+      margin-top: 10px;
+      width: 100%;
+    }
   </style>
 </head>
 <body>
@@ -155,6 +159,7 @@
       <div id="statsUserPanel">
         <strong>Ваша статистика:</strong>
         <div id="stats">Загрузка...</div>
+        <button id="resetStatsBtn" style="display: none">Сбросить мою статистику</button>
       </div>
     </div>
   </div>
@@ -168,8 +173,7 @@
     const firebaseConfig = {
       apiKey: "AIzaSyB44W1CnyyftFFxskgbhFvtCuOvBVN6Xyk",
       authDomain: "crossnull-cc1c8.firebaseapp.com",
-      databaseURL:
-        "https://crossnull-cc1c8-default-rtdb.firebaseio.com",
+      databaseURL: "https://crossnull-cc1c8-default-rtdb.firebaseio.com",
       projectId: "crossnull-cc1c8",
       storageBucket: "crossnull-cc1c8.appspot.com",
       messagingSenderId: "504007695287",
@@ -188,6 +192,7 @@
     const statsAllEl = document.getElementById("statsAll");
     const authPanel = document.getElementById("authPanel");
     const logoutBtn = document.getElementById("logoutBtn");
+    const resetStatsBtn = document.getElementById("resetStatsBtn");
 
     let currentUser = null;
 
@@ -214,52 +219,56 @@
       return winCombos.some((combo) => combo.every((i) => bd[i] === sym));
     }
 
-    // Улучшенный алгоритм хода бота
+    // Усовершенствованный алгоритм бота
     function botMove() {
-      // 1. Проверка победы бота
+      // 1. Проверим, может ли бот выиграть сразу
       for (let i = 0; i < 9; i++) {
         if (!cells[i]) {
-          const tempBoard = [...cells];
-          tempBoard[i] = "O";
-          if (checkWinner(tempBoard, "O")) {
+          cells[i] = 'O';
+          if (checkWinner(cells, 'O')) {
             return i;
           }
+          cells[i] = null;
         }
       }
 
-      // 2. Блокировка победы игрока
+      // 2. Проверим, нужно ли блокировать игрока
       for (let i = 0; i < 9; i++) {
         if (!cells[i]) {
-          const tempBoard = [...cells];
-          tempBoard[i] = "X";
-          if (checkWinner(tempBoard, "X")) {
+          cells[i] = 'X';
+          if (checkWinner(cells, 'X')) {
+            cells[i] = 'O';
             return i;
           }
+          cells[i] = null;
         }
       }
 
-      // 3. Центр
+      // 3. Занять центр, если свободен
       if (!cells[4]) return 4;
 
-      // 4. Углы
-      const corners = [0, 2, 6, 8];
-      const emptyCorners = corners.filter(i => !cells[i]);
-      if (emptyCorners.length > 0) {
-        // Если игрок занимает противоположные углы, выбираем сторону для предотвращения вилки
-        if ((cells[0] === "X" && cells[8] === "X") || (cells[2] === "X" && cells[6] === "X")) {
-          const sides = [1, 3, 5, 7];
-          const emptySides = sides.filter(i => !cells[i]);
-          if (emptySides.length > 0) return emptySides[0];
+      // 4. Если игрок в углу - занять противоположный угол
+      const corners = [[0,8], [2,6], [6,2], [8,0]];
+      for (const [i, opposite] of corners) {
+        if (cells[i] === 'X' && !cells[opposite]) {
+          return opposite;
         }
-        return emptyCorners[0];
       }
 
-      // 5. Стороны
-      const sides = [1, 3, 5, 7];
-      const emptySides = sides.filter(i => !cells[i]);
-      if (emptySides.length > 0) return emptySides[0];
+      // 5. Занять любой свободный угол
+      const availableCorners = [0, 2, 6, 8].filter(i => !cells[i]);
+      if (availableCorners.length > 0) {
+        return availableCorners[0];
+      }
 
-      return cells.indexOf(null); // На всякий случай
+      // 6. Занять любую свободную сторону
+      const sides = [1, 3, 5, 7].filter(i => !cells[i]);
+      if (sides.length > 0) {
+        return sides[0];
+      }
+
+      // 7. На всякий случай вернуть первую свободную ячейку
+      return cells.indexOf(null);
     }
 
     function renderBoard() {
@@ -417,12 +426,14 @@
         userEl.textContent = user.email;
         authPanel.style.display = "none";
         logoutBtn.style.display = "block";
+        resetStatsBtn.style.display = "block";
         listenStats(user.uid);
       } else {
         currentUser = null;
         userEl.textContent = "";
         authPanel.style.display = "flex";
         logoutBtn.style.display = "none";
+        resetStatsBtn.style.display = "none";
         displayStats(null, null);
       }
     }
@@ -459,6 +470,20 @@
 
     logoutBtn.addEventListener("click", () => {
       auth.signOut();
+    });
+
+    resetStatsBtn.addEventListener("click", () => {
+      if (currentUser) {
+        if (confirm("Вы уверены, что хотите сбросить свою статистику?")) {
+          db.ref("users/" + currentUser.uid + "/stats").set({
+            wins: 0,
+            losses: 0,
+            draws: 0
+          });
+        }
+      } else {
+        alert("Войдите в систему, чтобы сбросить статистику");
+      }
     });
 
     // Запуск
