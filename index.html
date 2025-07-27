@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Уничижитель</title>
   <style>
     body {
@@ -113,10 +113,6 @@
       margin-bottom: 10px;
       min-height: 24px;
     }
-    #resetStatsBtn {
-      margin-top: 10px;
-      width: 100%;
-    }
   </style>
 </head>
 <body>
@@ -159,7 +155,6 @@
       <div id="statsUserPanel">
         <strong>Ваша статистика:</strong>
         <div id="stats">Загрузка...</div>
-        <button id="resetStatsBtn" style="display: none">Сбросить мою статистику</button>
       </div>
     </div>
   </div>
@@ -192,7 +187,6 @@
     const statsAllEl = document.getElementById("statsAll");
     const authPanel = document.getElementById("authPanel");
     const logoutBtn = document.getElementById("logoutBtn");
-    const resetStatsBtn = document.getElementById("resetStatsBtn");
 
     let currentUser = null;
 
@@ -219,60 +213,79 @@
       return winCombos.some((combo) => combo.every((i) => bd[i] === sym));
     }
 
-    // Совершенный алгоритм бота
+    // Совершенный бот
     function botMove() {
-      // 1. Проверить, может ли бот выиграть
+      // 1. Победа бота
       for (let i = 0; i < 9; i++) {
         if (!cells[i]) {
-          cells[i] = 'O';
-          if (checkWinner(cells, 'O')) return i;
-          cells[i] = null;
-        }
-      }
-
-      // 2. Блокировать игрока
-      for (let i = 0; i < 9; i++) {
-        if (!cells[i]) {
-          cells[i] = 'X';
-          if (checkWinner(cells, 'X')) {
-            cells[i] = 'O';
+          cells[i] = "O";
+          if (checkWinner(cells, "O")) {
             return i;
           }
           cells[i] = null;
         }
       }
 
-      // 3. Защита от угловой ловушки
-      const playerCorners = [0, 2, 6, 8].filter(i => cells[i] === 'X');
-      const hasOppositeCorners = 
-        (cells[0] === 'X' && cells[8] === 'X') || 
-        (cells[2] === 'X' && cells[6] === 'X');
-      
-      if (playerCorners.length >= 2 && hasOppositeCorners) {
-        const sides = [1, 3, 5, 7].filter(i => !cells[i]);
-        if (sides.length > 0) return sides[0];
-      }
-
-      // 4. Занять центр
-      if (!cells[4]) return 4;
-
-      // 5. Противоположный угол, если игрок в углу
-      const oppositeCorners = {0:8, 2:6, 6:2, 8:0};
-      for (const corner in oppositeCorners) {
-        if (cells[corner] === 'X' && !cells[oppositeCorners[corner]]) {
-          return oppositeCorners[corner];
+      // 2. Блокировка игрока
+      for (let i = 0; i < 9; i++) {
+        if (!cells[i]) {
+          cells[i] = "X";
+          if (checkWinner(cells, "X")) {
+            cells[i] = null;
+            cells[i] = "O";
+            return i;
+          }
+          cells[i] = null;
         }
       }
 
-      // 6. Свободный угол
-      const corners = [0, 2, 6, 8].filter(i => !cells[i]);
-      if (corners.length > 0) return corners[0];
+      // 3. Центр, если свободен
+      if (!cells[4]) {
+        cells[4] = "O";
+        return 4;
+      }
 
-      // 7. Свободная сторона
-      const sides = [1, 3, 5, 7].filter(i => !cells[i]);
-      if (sides.length > 0) return sides[0];
+      // 4. Если игрок в противоположных углах - занять сторону
+      const oppositeCorners = [[0,8], [2,6]];
+      for (const [a, b] of oppositeCorners) {
+        if (cells[a] === "X" && cells[b] === "X") {
+          const sides = [1, 3, 5, 7];
+          const emptySides = sides.filter(i => !cells[i]);
+          if (emptySides.length > 0) {
+            const side = emptySides[Math.floor(Math.random() * emptySides.length)];
+            cells[side] = "O";
+            return side;
+          }
+        }
+      }
 
-      return cells.indexOf(null);
+      // 5. Противоположный угол, если игрок в углу
+      const cornerOpposites = {0:8, 2:6, 6:2, 8:0};
+      for (const corner in cornerOpposites) {
+        const opposite = cornerOpposites[corner];
+        if (cells[corner] === "X" && !cells[opposite]) {
+          cells[opposite] = "O";
+          return opposite;
+        }
+      }
+
+      // 6. Любой свободный угол
+      const corners = [0, 2, 6, 8];
+      const emptyCorners = corners.filter(i => !cells[i]);
+      if (emptyCorners.length > 0) {
+        const corner = emptyCorners[Math.floor(Math.random() * emptyCorners.length)];
+        cells[corner] = "O";
+        return corner;
+      }
+
+      // 7. Любая свободная сторона
+      const sides = [1, 3, 5, 7];
+      const emptySides = sides.filter(i => !cells[i]);
+      if (emptySides.length > 0) {
+        const side = emptySides[Math.floor(Math.random() * emptySides.length)];
+        cells[side] = "O";
+        return side;
+      }
     }
 
     function renderBoard() {
@@ -281,53 +294,46 @@
         const div = document.createElement("div");
         div.className = "cell";
         div.innerText = cells[i] || "";
-        div.addEventListener("click", () => makePlayerMove(i));
+        div.addEventListener("click", () => {
+          if (gameOver || !playerTurn || cells[i]) return;
+          cells[i] = "X";
+          playerTurn = false;
+          renderBoard();
+          if (checkWinner(cells, "X")) {
+            setStatus("Вы выиграли!");
+            gameOver = true;
+            updateUserStats("wins");
+            updateGlobalStats("wins");
+            return;
+          }
+          if (!cells.includes(null)) {
+            setStatus("Ничья");
+            gameOver = true;
+            updateUserStats("draws");
+            updateGlobalStats("draws");
+            return;
+          }
+          const botIndex = botMove();
+          renderBoard();
+          if (checkWinner(cells, "O")) {
+            setStatus("Бот победил!");
+            gameOver = true;
+            updateUserStats("losses");
+            updateGlobalStats("losses");
+            return;
+          }
+          if (!cells.includes(null)) {
+            setStatus("Ничья");
+            gameOver = true;
+            updateUserStats("draws");
+            updateGlobalStats("draws");
+            return;
+          }
+          playerTurn = true;
+          setStatus("Ваш ход");
+        });
         board.appendChild(div);
       }
-    }
-
-    function makePlayerMove(i) {
-      if (gameOver || !playerTurn || cells[i]) return;
-      
-      cells[i] = "X";
-      playerTurn = false;
-      renderBoard();
-      
-      if (checkWinner(cells, "X")) {
-        endGame("Вы выиграли!", "wins");
-        return;
-      }
-      
-      if (!cells.includes(null)) {
-        endGame("Ничья", "draws");
-        return;
-      }
-      
-      setTimeout(() => {
-        const botIndex = botMove();
-        cells[botIndex] = "O";
-        renderBoard();
-        
-        if (checkWinner(cells, "O")) {
-          endGame("Бот победил!", "losses");
-          return;
-        }
-        
-        if (!cells.includes(null)) {
-          endGame("Ничья", "draws");
-          return;
-        }
-        
-        playerTurn = true;
-        setStatus("Ваш ход");
-      }, 500);
-    }
-
-    function endGame(message, stat) {
-      setStatus(message);
-      gameOver = true;
-      updateUserStats(stat);
-      updateGlobalStats(stat);
     }
 
     function setStatus(text) {
@@ -342,88 +348,128 @@
       renderBoard();
     }
 
-    newGameBtn.addEventListener("click", resetGame);
+    newGameBtn.addEventListener("click", () => {
+      resetGame();
+    });
 
-    // Работа с Firebase
+    // Работа с Firebase статистикой
     function updateUserStats(field) {
       if (!currentUser) return;
-      db.ref("users/" + currentUser.uid + "/stats").transaction(stats => {
-        return stats ? {...stats, [field]: (stats[field] || 0) + 1} : 
-                      {wins: 0, losses: 0, draws: 0, [field]: 1};
+      const statsRef = db.ref("users/" + currentUser.uid + "/stats");
+      statsRef.transaction((stats) => {
+        if (stats == null) {
+          stats = { wins: 0, losses: 0, draws: 0 };
+        }
+        stats[field] = (stats[field] || 0) + 1;
+        return stats;
       });
     }
 
     function updateGlobalStats(field) {
-      db.ref("globalStats").transaction(stats => {
-        return stats ? {...stats, [field]: (stats[field] || 0) + 1} : 
-                      {wins: 0, losses: 0, draws: 0, [field]: 1};
+      const globalRef = db.ref("globalStats");
+      globalRef.transaction((stats) => {
+        if (stats == null) {
+          stats = { wins: 0, losses: 0, draws: 0 };
+        }
+        stats[field] = (stats[field] || 0) + 1;
+        return stats;
       });
     }
 
     function displayStats(userStats, globalStats) {
-      statsEl.innerHTML = userStats ? `<br>Побед: ${userStats.wins || 0}<br>
-        Поражений: ${userStats.losses || 0}<br>Ничьих: ${userStats.draws || 0}` : 
-        "<br>Нет данных";
-      
-      statsAllEl.innerHTML = globalStats ? `<br>Побед: ${globalStats.wins || 0}<br>
-        Поражений: ${globalStats.losses || 0}<br>Ничьих: ${globalStats.draws || 0}` : 
-        "<br>Нет данных";
+      if (userStats) {
+        statsEl.innerHTML = `<br>
+          Побед: ${userStats.wins || 0}<br>
+          Поражений: ${userStats.losses || 0}<br>
+          Ничьих: ${userStats.draws || 0}`;
+      } else {
+        statsEl.innerHTML = `<br>Нет данных`;
+      }
+      if (globalStats) {
+        statsAllEl.innerHTML = `<br>
+          Побед: ${globalStats.wins || 0}<br>
+          Поражений: ${globalStats.losses || 0}<br>
+          Ничьих: ${globalStats.draws || 0}`;
+      } else {
+        statsAllEl.innerHTML = `<br>Нет данных`;
+      }
     }
 
     function listenStats(uid) {
-      if (!uid) return displayStats(null, null);
-      
-      db.ref("users/" + uid + "/stats").on("value", userSnap => {
-        db.ref("globalStats").once("value", globalSnap => {
-          displayStats(userSnap.val(), globalSnap.val());
+      if (!uid) {
+        displayStats(null, null);
+        return;
+      }
+      const userStatsRef = db.ref("users/" + uid + "/stats");
+      const globalStatsRef = db.ref("globalStats");
+
+      userStatsRef.on("value", (snapshot) => {
+        const userStats = snapshot.val();
+        db.ref("globalStats").once("value").then((snap) => {
+          displayStats(userStats, snap.val());
+        });
+      });
+
+      globalStatsRef.on("value", (snapshot) => {
+        const globalStats = snapshot.val();
+        db.ref("users/" + uid + "/stats").once("value").then((snap) => {
+          displayStats(snap.val(), globalStats);
         });
       });
     }
 
+    // Аутентификация
     function updateUI(user) {
-      currentUser = user;
       if (user) {
+        currentUser = user;
         userEl.textContent = user.email;
         authPanel.style.display = "none";
-        logoutBtn.style.display = resetStatsBtn.style.display = "block";
+        logoutBtn.style.display = "block";
         listenStats(user.uid);
       } else {
+        currentUser = null;
         userEl.textContent = "";
         authPanel.style.display = "flex";
-        logoutBtn.style.display = resetStatsBtn.style.display = "none";
+        logoutBtn.style.display = "none";
         displayStats(null, null);
       }
     }
 
-    // Обработчики событий
-    auth.onAuthStateChanged(updateUI);
-    
+    auth.onAuthStateChanged((user) => {
+      updateUI(user);
+      resetGame();
+    });
+
     document.getElementById("registerBtn").addEventListener("click", () => {
-      const email = emailEl.value.trim(), password = passwordEl.value;
-      if (!email || !password) return alert("Введите email и пароль");
-      auth.createUserWithEmailAndPassword(email, password)
+      const email = emailEl.value.trim();
+      const password = passwordEl.value;
+      if (!email || !password) {
+        alert("Введите email и пароль");
+        return;
+      }
+      auth
+        .createUserWithEmailAndPassword(email, password)
         .then(() => alert("Регистрация успешна"))
-        .catch(e => alert("Ошибка: " + e.message));
+        .catch((e) => alert("Ошибка: " + e.message));
     });
 
     document.getElementById("loginBtn").addEventListener("click", () => {
-      const email = emailEl.value.trim(), password = passwordEl.value;
-      if (!email || !password) return alert("Введите email и пароль");
-      auth.signInWithEmailAndPassword(email, password)
-        .catch(e => alert("Ошибка: " + e.message));
-    });
-
-    logoutBtn.addEventListener("click", () => auth.signOut());
-    
-    resetStatsBtn.addEventListener("click", () => {
-      if (currentUser && confirm("Сбросить вашу статистику?")) {
-        db.ref("users/" + currentUser.uid + "/stats").set({
-          wins: 0, losses: 0, draws: 0
-        });
+      const email = emailEl.value.trim();
+      const password = passwordEl.value;
+      if (!email || !password) {
+        alert("Введите email и пароль");
+        return;
       }
+      auth
+        .signInWithEmailAndPassword(email, password)
+        .catch((e) => alert("Ошибка: " + e.message));
     });
 
-    // Инициализация
+    logoutBtn.addEventListener("click", () => {
+      auth.signOut();
+    });
+
+    // Запуск
     resetGame();
   </script>
 </body>
