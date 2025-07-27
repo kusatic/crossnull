@@ -24,24 +24,26 @@
       margin: 5px; padding: 8px; font-size: 16px; background: #21262d; color: white; border: 1px solid #30363d;
     }
     #status { margin: 10px; font-size: 18px; }
+    #authPanel.hidden { display: none; }
   </style>
 </head>
 <body>
   <h1>Крестики-нолики</h1>
-  <div>
+  <div id="authPanel">
     <input type="email" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Пароль">
     <button id="registerBtn">Регистрация</button>
     <button id="loginBtn">Вход</button>
-    <button id="logoutBtn">Выход</button>
   </div>
+  <button id="logoutBtn" style="display:none;">Выход</button>
   <div id="user"></div>
-
+  <div id="stats"></div>
   <div id="board"></div>
   <div id="status">Ход игрока</div>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyB44W1CnyyftFFxskgbhFvtCuOvBVN6Xyk",
@@ -53,28 +55,55 @@
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    const emailEl = document.getElementById("email");
+    const passwordEl = document.getElementById("password");
+    const userEl = document.getElementById("user");
+    const statsEl = document.getElementById("stats");
+    const authPanel = document.getElementById("authPanel");
+    const logoutBtn = document.getElementById("logoutBtn");
 
     document.getElementById("registerBtn").addEventListener("click", () => {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      auth.createUserWithEmailAndPassword(email, password)
-        .then(() => alert("Регистрация успешна"))
+      auth.createUserWithEmailAndPassword(emailEl.value, passwordEl.value)
+        .then(cred => {
+          return db.collection("stats").doc(cred.user.uid).set({ wins: 0, losses: 0, draws: 0 });
+        })
         .catch(e => alert(e.message));
     });
 
     document.getElementById("loginBtn").addEventListener("click", () => {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      auth.signInWithEmailAndPassword(email, password)
+      auth.signInWithEmailAndPassword(emailEl.value, passwordEl.value)
         .catch(e => alert(e.message));
     });
 
-    document.getElementById("logoutBtn").addEventListener("click", () => {
-      auth.signOut();
-    });
+    logoutBtn.addEventListener("click", () => auth.signOut());
+
+    function updateStats(uid) {
+      db.collection("stats").doc(uid).get().then(doc => {
+        if (doc.exists) {
+          const { wins, losses, draws } = doc.data();
+          statsEl.innerText = `Победы: ${wins}, Поражения: ${losses}, Ничьи: ${draws}`;
+        }
+      });
+    }
+
+    function updateStat(uid, field) {
+      db.collection("stats").doc(uid).update({ [field]: firebase.firestore.FieldValue.increment(1) });
+    }
 
     auth.onAuthStateChanged(user => {
-      document.getElementById("user").innerText = user ? `Вы вошли как ${user.email}` : "Вы не вошли";
+      if (user) {
+        userEl.innerText = `Вы вошли как ${user.email}`;
+        authPanel.classList.add("hidden");
+        logoutBtn.style.display = "inline-block";
+        updateStats(user.uid);
+      } else {
+        userEl.innerText = "Вы не вошли";
+        authPanel.classList.remove("hidden");
+        logoutBtn.style.display = "none";
+        statsEl.innerText = "";
+      }
     });
 
     const board = document.getElementById("board");
@@ -125,12 +154,28 @@
             cells[i] = "X";
             playerTurn = false;
             renderBoard();
-            if (checkWinner(cells, "X")) return setStatus("Вы выиграли!");
-            if (!cells.includes(null)) return setStatus("Ничья");
+            if (checkWinner(cells, "X")) {
+              setStatus("Вы выиграли!");
+              if (auth.currentUser) updateStat(auth.currentUser.uid, "wins");
+              return;
+            }
+            if (!cells.includes(null)) {
+              setStatus("Ничья");
+              if (auth.currentUser) updateStat(auth.currentUser.uid, "draws");
+              return;
+            }
             botMove();
             renderBoard();
-            if (checkWinner(cells, "O")) return setStatus("Бот победил!");
-            if (!cells.includes(null)) return setStatus("Ничья");
+            if (checkWinner(cells, "O")) {
+              setStatus("Бот победил!");
+              if (auth.currentUser) updateStat(auth.currentUser.uid, "losses");
+              return;
+            }
+            if (!cells.includes(null)) {
+              setStatus("Ничья");
+              if (auth.currentUser) updateStat(auth.currentUser.uid, "draws");
+              return;
+            }
             playerTurn = true;
           }
         });
@@ -140,6 +185,7 @@
 
     function setStatus(text) {
       document.getElementById("status").innerText = text;
+      if (auth.currentUser) updateStats(auth.currentUser.uid);
     }
 
     renderBoard();
