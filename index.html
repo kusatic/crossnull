@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Крестики-нолики + Firebase</title>
   <style>
     body {
@@ -31,9 +31,9 @@
   <div>
     <input type="email" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Пароль">
-    <button onclick="register()">Регистрация</button>
-    <button onclick="login()">Вход</button>
-    <button onclick="logout()">Выход</button>
+    <button id="registerBtn">Регистрация</button>
+    <button id="loginBtn">Вход</button>
+    <button id="logoutBtn">Выход</button>
   </div>
   <div id="user"></div>
 
@@ -42,7 +42,6 @@
 
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyB44W1CnyyftFFxskgbhFvtCuOvBVN6Xyk",
@@ -55,30 +54,29 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
-    function register() {
+    document.getElementById("registerBtn").addEventListener("click", () => {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
       auth.createUserWithEmailAndPassword(email, password)
         .then(() => alert("Регистрация успешна"))
         .catch(e => alert(e.message));
-    }
+    });
 
-    function login() {
+    document.getElementById("loginBtn").addEventListener("click", () => {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
       auth.signInWithEmailAndPassword(email, password)
         .catch(e => alert(e.message));
-    }
+    });
 
-    function logout() {
+    document.getElementById("logoutBtn").addEventListener("click", () => {
       auth.signOut();
-    }
+    });
 
     auth.onAuthStateChanged(user => {
       document.getElementById("user").innerText = user ? `Вы вошли как ${user.email}` : "Вы не вошли";
     });
 
-    // --- Крестики-нолики ---
     const board = document.getElementById("board");
     let cells = Array(9).fill(null);
     let playerTurn = true;
@@ -122,20 +120,20 @@
         const div = document.createElement("div");
         div.className = "cell";
         div.innerText = cells[i] || "";
-        div.onclick = () => {
+        div.addEventListener("click", () => {
           if (!cells[i] && playerTurn) {
             cells[i] = "X";
             playerTurn = false;
             renderBoard();
             if (checkWinner(cells, "X")) return setStatus("Вы выиграли!");
             if (!cells.includes(null)) return setStatus("Ничья");
-            const bot = botMove();
+            botMove();
             renderBoard();
             if (checkWinner(cells, "O")) return setStatus("Бот победил!");
             if (!cells.includes(null)) return setStatus("Ничья");
             playerTurn = true;
           }
-        };
+        });
         board.appendChild(div);
       }
     }
