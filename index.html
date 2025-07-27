@@ -6,9 +6,9 @@
   <title>Уничижитель</title>
   <style>
     :root {
-      --cell-size: min(25vw, 100px);
-      --panel-width: min(90vw, 300px);
-      --gap-size: min(3vw, 15px);
+      --cell-size: min(20vw, 100px);
+      --panel-width: min(25vw, 200px);
+      --gap-size: min(2vw, 10px);
     }
     
     body {
@@ -25,25 +25,41 @@
     h1 {
       color: #58a6ff;
       text-align: center;
-      margin: 10px 0;
+      margin: 0 0 10px 0;
       font-size: clamp(1.5rem, 5vw, 2rem);
     }
     
     #container {
       display: flex;
-      flex-direction: column;
-      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
       gap: var(--gap-size);
       max-width: 900px;
       margin: 0 auto;
     }
     
+    #statsAllPanel {
+      flex: 0 1 var(--panel-width);
+      background: #161b22;
+      padding: 12px;
+      border-radius: 8px;
+      order: 1;
+    }
+    
     #gamePanel {
-      order: 2;
-      width: 100%;
+      flex: 0 1 calc(3 * var(--cell-size) + 2 * var(--gap-size));
       display: flex;
       flex-direction: column;
       align-items: center;
+      order: 2;
+    }
+    
+    #rightPanel {
+      flex: 0 1 var(--panel-width);
+      display: flex;
+      flex-direction: column;
+      gap: var(--gap-size);
+      order: 3;
     }
     
     #board {
@@ -67,20 +83,10 @@
       -webkit-tap-highlight-color: transparent;
     }
     
-    #panelsWrapper {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: var(--gap-size);
-      order: 1;
-    }
-    
     .panel {
       background: #161b22;
       padding: 12px;
       border-radius: 8px;
-      width: 100%;
-      box-sizing: border-box;
     }
     
     #status {
@@ -95,7 +101,7 @@
       color: white;
       border: 1px solid #30363d;
       border-radius: 5px;
-      font-size: clamp(0.9rem, 3.5vw, 1rem);
+      font-size: clamp(0.8rem, 3vw, 1rem);
       padding: 8px;
       width: 100%;
       box-sizing: border-box;
@@ -116,40 +122,41 @@
       color: #58a6ff;
       text-align: center;
       word-break: break-all;
-      font-size: clamp(0.9rem, 3.5vw, 1rem);
+      font-size: clamp(0.8rem, 3vw, 1rem);
     }
     
-    @media (min-width: 768px) {
+    @media (max-width: 768px) {
       #container {
-        flex-direction: row;
-        align-items: flex-start;
+        flex-direction: column;
+        align-items: center;
       }
       
-      #gamePanel {
-        flex: 2;
-        order: 2;
+      #statsAllPanel, #gamePanel, #rightPanel {
+        flex: 1 1 auto;
+        width: 100%;
+        max-width: 400px;
       }
       
-      #panelsWrapper {
-        flex: 1;
-        max-width: var(--panel-width);
+      #statsAllPanel {
         order: 1;
       }
       
+      #rightPanel {
+        order: 2;
+      }
+      
+      #gamePanel {
+        order: 3;
+      }
+      
       :root {
-        --cell-size: 100px;
-        --gap-size: 10px;
+        --cell-size: min(28vw, 100px);
       }
     }
     
-    /* Особые стили для очень маленьких экранов */
-    @media (max-width: 350px) {
+    @media (max-width: 400px) {
       :root {
-        --cell-size: 22vw;
-      }
-      
-      #authPanel {
-        gap: 6px;
+        --cell-size: 28vw;
       }
     }
   </style>
@@ -158,7 +165,18 @@
   <h1>Уничижитель</h1>
 
   <div id="container">
-    <div id="panelsWrapper">
+    <div id="statsAllPanel" class="panel">
+      <strong>Общая статистика:</strong>
+      <div id="statsAll">Загрузка...</div>
+    </div>
+
+    <div id="gamePanel">
+      <div id="board"></div>
+      <div id="status">Ваш ход</div>
+      <button id="newGameBtn">Новая игра</button>
+    </div>
+
+    <div id="rightPanel">
       <div id="loginPanel" class="panel">
         <div id="authPanel">
           <input type="email" id="email" placeholder="Email" autocomplete="username" />
@@ -174,17 +192,6 @@
         <strong>Ваша статистика:</strong>
         <div id="stats">Загрузка...</div>
       </div>
-
-      <div id="statsAllPanel" class="panel">
-        <strong>Общая статистика:</strong>
-        <div id="statsAll">Загрузка...</div>
-      </div>
-    </div>
-
-    <div id="gamePanel">
-      <div id="board"></div>
-      <div id="status">Ваш ход</div>
-      <button id="newGameBtn">Новая игра</button>
     </div>
   </div>
 
