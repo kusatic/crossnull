@@ -1,28 +1,78 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Крестики-нолики с идеальным ботом и Firebase</title>
 <style>
   body {
     background-color: #0d1117;
     color: #c9d1d9;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
       Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-    text-align: center;
     margin: 0; padding: 20px;
   }
+
   h1 {
     color: #58a6ff;
+    text-align: center;
+    margin-bottom: 20px;
   }
+
+  #container {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  #statsPanel {
+    flex: 1 1 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: #161b22;
+    padding: 15px;
+    border-radius: 8px;
+    min-width: 200px;
+  }
+
+  #loginPanel {
+    flex: 1 1 250px;
+    background: #161b22;
+    padding: 15px;
+    border-radius: 8px;
+    min-width: 250px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #authPanel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  #authPanel input, #authPanel button {
+    width: 100%;
+  }
+
+  #logoutBtn {
+    margin-top: 10px;
+    width: 100%;
+  }
+
+  #gamePanel {
+    flex: 2 1 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
   #board {
     display: grid;
     grid-template-columns: repeat(3, 100px);
     gap: 5px;
-    justify-content: center;
-    margin: 20px auto;
+    margin-bottom: 15px;
   }
+
   .cell {
     width: 100px;
     height: 100px;
@@ -35,316 +85,54 @@
     cursor: pointer;
     user-select: none;
   }
+
   .cell:hover {
     background: #21262d;
   }
-  input, button {
-    margin: 5px;
-    padding: 8px;
-    font-size: 16px;
+
+  button, input {
     background: #21262d;
     color: white;
     border: 1px solid #30363d;
     border-radius: 5px;
+    font-size: 16px;
+    padding: 8px;
   }
+
   button:hover {
     background: #30363d;
   }
-  #status, #user, #stats, #statsAll {
-    margin: 10px;
+
+  #status {
     font-size: 18px;
-  }
-  #authPanel.hidden {
-    display: none;
+    margin-bottom: 10px;
   }
 </style>
-</head>
-<body>
 
 <h1>Крестики-нолики с идеальным ботом</h1>
 
-<div id="authPanel">
-  <input type="email" id="email" placeholder="Email" autocomplete="username" />
-  <input type="password" id="password" placeholder="Пароль" autocomplete="current-password" />
-  <br />
-  <button id="registerBtn">Регистрация</button>
-  <button id="loginBtn">Вход</button>
+<div id="container">
+
+  <div id="statsPanel">
+    <div id="stats"><strong>Ваша статистика:</strong><br>Загрузка...</div>
+    <div id="statsAll"><strong>Общая статистика:</strong><br>Загрузка...</div>
+  </div>
+
+  <div id="gamePanel">
+    <div id="board"></div>
+    <button id="newGameBtn">Новая игра</button>
+    <div id="status">Ваш ход</div>
+  </div>
+
+  <div id="loginPanel">
+    <div id="authPanel">
+      <input type="email" id="email" placeholder="Email" autocomplete="username" />
+      <input type="password" id="password" placeholder="Пароль" autocomplete="current-password" />
+      <button id="registerBtn">Регистрация</button>
+      <button id="loginBtn">Вход</button>
+    </div>
+    <button id="logoutBtn" style="display:none;">Выход</button>
+    <div id="user" style="margin-top: 15px; color: #58a6ff;"></div>
+  </div>
+
 </div>
-
-<button id="logoutBtn" style="display:none;">Выход</button>
-
-<div id="user"></div>
-<div id="stats"></div>
-<div id="statsAll"></div>
-
-<div id="board"></div>
-
-<div>
-  <button id="newGameBtn" style="margin-top:15px;">Новая игра</button>
-</div>
-
-<div id="status">Ход игрока</div>
-
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-
-<script>
-  // Инициализация Firebase
-  const firebaseConfig = {
-    apiKey: "AIzaSyB44W1CnyyftFFxskgbhFvtCuOvBVN6Xyk",
-    authDomain: "crossnull-cc1c8.firebaseapp.com",
-    databaseURL: "https://crossnull-cc1c8-default-rtdb.firebaseio.com",
-    projectId: "crossnull-cc1c8",
-    storageBucket: "crossnull-cc1c8.appspot.com",
-    messagingSenderId: "504007695287",
-    appId: "1:504007695287:web:1e30750b9518070adfa632"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.database();
-
-  // Элементы UI
-  const emailEl = document.getElementById("email");
-  const passwordEl = document.getElementById("password");
-  const authPanel = document.getElementById("authPanel");
-  const logoutBtn = document.getElementById("logoutBtn");
-  const userEl = document.getElementById("user");
-  const statsEl = document.getElementById("stats");
-  const statsAllEl = document.getElementById("statsAll");
-  const boardEl = document.getElementById("board");
-  const statusEl = document.getElementById("status");
-  const newGameBtn = document.getElementById("newGameBtn");
-
-  // Игровые переменные
-  let cells = Array(9).fill(null);
-  let playerTurn = true;
-  let gameOver = false;
-
-  // Регистрация
-  document.getElementById("registerBtn").addEventListener("click", () => {
-    const email = emailEl.value.trim();
-    const password = passwordEl.value;
-    if (!email || !password) {
-      alert("Введите email и пароль!");
-      return;
-    }
-    auth.createUserWithEmailAndPassword(email, password)
-      .then(cred => {
-        // Инициализируем статистику пользователя в базе
-        db.ref("stats/" + cred.user.uid).set({ wins: 0, losses: 0, draws: 0 });
-      })
-      .catch(e => alert(e.message));
-  });
-
-  // Вход
-  document.getElementById("loginBtn").addEventListener("click", () => {
-    const email = emailEl.value.trim();
-    const password = passwordEl.value;
-    if (!email || !password) {
-      alert("Введите email и пароль!");
-      return;
-    }
-    auth.signInWithEmailAndPassword(email, password)
-      .catch(e => alert(e.message));
-  });
-
-  // Выход
-  logoutBtn.addEventListener("click", () => auth.signOut());
-
-  // Отображение статуса пользователя и статистики
-  auth.onAuthStateChanged(user => {
-    if (user) {
-      userEl.textContent = `Вы вошли как: ${user.email}`;
-      authPanel.classList.add("hidden");
-      logoutBtn.style.display = "inline-block";
-      loadUserStats(user.uid);
-      loadGlobalStats();
-    } else {
-      userEl.textContent = "Вы не вошли";
-      authPanel.classList.remove("hidden");
-      logoutBtn.style.display = "none";
-      statsEl.textContent = "";
-      statsAllEl.textContent = "";
-    }
-    resetGame();
-  });
-
-  // Загрузка статистики текущего пользователя
-  function loadUserStats(uid) {
-    db.ref("stats/" + uid).get().then(snapshot => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        statsEl.textContent = `Ваша статистика — Победы: ${data.wins}, Поражения: ${data.losses}, Ничьи: ${data.draws}`;
-      } else {
-        statsEl.textContent = "Статистика не найдена.";
-      }
-    }).catch(() => {
-      statsEl.textContent = "Ошибка загрузки статистики.";
-    });
-  }
-
-  // Загрузка общей статистики (сумма по всем игрокам)
-  function loadGlobalStats() {
-    db.ref("stats").get().then(snapshot => {
-      if (snapshot.exists()) {
-        let totalWins = 0, totalLosses = 0, totalDraws = 0;
-        snapshot.forEach(childSnap => {
-          const d = childSnap.val();
-          totalWins += d.wins || 0;
-          totalLosses += d.losses || 0;
-          totalDraws += d.draws || 0;
-        });
-        statsAllEl.textContent = `Общая статистика всех игроков — Победы: ${totalWins}, Поражения: ${totalLosses}, Ничьи: ${totalDraws}`;
-      } else {
-        statsAllEl.textContent = "Общая статистика отсутствует.";
-      }
-    }).catch(() => {
-      statsAllEl.textContent = "Ошибка загрузки общей статистики.";
-    });
-  }
-
-  // Обновление статистики текущего пользователя
-  function updateUserStat(uid, field) {
-    const statRef = db.ref("stats/" + uid + "/" + field);
-    statRef.transaction(current => (current || 0) + 1).then(() => {
-      loadUserStats(uid);
-      loadGlobalStats();
-    });
-  }
-
-  // Логика игры и бот (алгоритм минимакс для идеального бота)
-  const winCombos = [
-    [0,1,2],[3,4,5],[6,7,8],
-    [0,3,6],[1,4,7],[2,5,8],
-    [0,4,8],[2,4,6]
-  ];
-
-  function checkWinner(board, symbol) {
-    return winCombos.some(combo => combo.every(i => board[i] === symbol));
-  }
-
-  function minimax(newBoard, isMaximizing) {
-    // Проверка победителя или ничьи
-    if (checkWinner(newBoard, "O")) return { score: 10 };
-    if (checkWinner(newBoard, "X")) return { score: -10 };
-    if (!newBoard.includes(null)) return { score: 0 };
-
-    if (isMaximizing) {
-      let bestScore = -Infinity;
-      let bestMove = -1;
-      for (let i=0; i<9; i++) {
-        if (newBoard[i] === null) {
-          newBoard[i] = "O";
-          let score = minimax(newBoard, false).score;
-          newBoard[i] = null;
-          if (score > bestScore) {
-            bestScore = score;
-            bestMove = i;
-          }
-        }
-      }
-      return { score: bestScore, index: bestMove };
-    } else {
-      let bestScore = Infinity;
-      let bestMove = -1;
-      for (let i=0; i<9; i++) {
-        if (newBoard[i] === null) {
-          newBoard[i] = "X";
-          let score = minimax(newBoard, true).score;
-          newBoard[i] = null;
-          if (score < bestScore) {
-            bestScore = score;
-            bestMove = i;
-          }
-        }
-      }
-      return { score: bestScore, index: bestMove };
-    }
-  }
-
-  function botMove() {
-    let move = minimax(cells.slice(), true).index;
-    if (move !== -1) {
-      cells[move] = "O";
-    }
-  }
-
-  // Отрисовка доски
-  function renderBoard() {
-    boardEl.innerHTML = "";
-    for (let i=0; i<9; i++) {
-      const cell = document.createElement("div");
-      cell.className = "cell";
-      cell.textContent = cells[i] || "";
-      cell.addEventListener("click", () => {
-        if (gameOver || !playerTurn || cells[i]) return;
-
-        cells[i] = "X";
-        playerTurn = false;
-        renderBoard();
-
-        if (checkWinner(cells, "X")) {
-          setStatus("Вы выиграли!");
-          gameOver = true;
-          if (auth.currentUser) updateUserStat(auth.currentUser.uid, "wins");
-          return;
-        }
-
-        if (!cells.includes(null)) {
-          setStatus("Ничья!");
-          gameOver = true;
-          if (auth.currentUser) updateUserStat(auth.currentUser.uid, "draws");
-          return;
-        }
-
-        setStatus("Ход бота...");
-        setTimeout(() => {
-          botMove();
-          renderBoard();
-
-          if (checkWinner(cells, "O")) {
-            setStatus("Бот выиграл!");
-            gameOver = true;
-            if (auth.currentUser) updateUserStat(auth.currentUser.uid, "losses");
-            return;
-          }
-
-          if (!cells.includes(null)) {
-            setStatus("Ничья!");
-            gameOver = true;
-            if (auth.currentUser) updateUserStat(auth.currentUser.uid, "draws");
-            return;
-          }
-
-          playerTurn = true;
-          setStatus("Ваш ход");
-        }, 400);
-      });
-      boardEl.appendChild(cell);
-    }
-  }
-
-  function setStatus(text) {
-    statusEl.textContent = text;
-  }
-
-  // Сброс игры
-  function resetGame() {
-    cells = Array(9).fill(null);
-    playerTurn = true;
-    gameOver = false;
-    renderBoard();
-    setStatus("Ваш ход");
-  }
-
-  newGameBtn.addEventListener("click", () => {
-    resetGame();
-  });
-
-  // Начинаем игру при загрузке
-  resetGame();
-</script>
-</body>
-</html>
