@@ -1,366 +1,478 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Уничижитель</title>
-  <style>
-    body {
-      background-color: #0d1117;
-      color: #c9d1d9;
-      font-family: sans-serif;
-      margin: 0;
-      padding: 20px;
-    }
-    h1 {
-      color: #58a6ff;
-      text-align: center;
-    }
-    #container {
-      display: flex;
-      justify-content: space-between;
-      max-width: 600px;
-      margin: 0 auto 20px;
-      gap: 20px;
-    }
-    #statsAll, #statsUser {
-      background: #161b22;
-      border: 1px solid #30363d;
-      padding: 15px;
-      border-radius: 8px;
-      width: 48%;
-      font-size: 16px;
-    }
-    #statsAll strong, #statsUser strong {
-      display: block;
-      font-size: 18px;
-      margin-bottom: 8px;
-      color: #58a6ff;
-    }
-    .highlight-losses {
-      color: #ff6c6c;
-      font-weight: 700;
-    }
-    #authPanel {
-      text-align: right;
-      max-width: 600px;
-      margin: 0 auto 20px;
-    }
-    #authPanel input, #authPanel button {
-      margin: 5px;
-      padding: 8px;
-      font-size: 16px;
-      background: #21262d;
-      color: white;
-      border: 1px solid #30363d;
-      border-radius: 5px;
-    }
-    #logoutBtn {
-      margin-left: 10px;
-      padding: 8px 12px;
-      font-size: 16px;
-      background: #bf4040;
-      border: none;
-      border-radius: 5px;
-      color: white;
-      cursor: pointer;
-    }
-    #user {
-      color: #8b949e;
-      font-size: 14px;
-      margin-top: 5px;
-    }
-    #board {
-      display: grid;
-      grid-template-columns: repeat(3, 100px);
-      gap: 5px;
-      justify-content: center;
-      margin: 0 auto 20px;
-    }
-    .cell {
-      width: 100px;
-      height: 100px;
-      background: #161b22;
-      border: 1px solid #30363d;
-      font-size: 36px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      user-select: none;
-    }
-    #status {
-      text-align: center;
-      font-size: 18px;
-      margin-bottom: 15px;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Уничижитель</title>
+<style>
+  body {
+    background-color: #0d1117;
+    color: #c9d1d9;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+      Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    margin: 0;
+    padding: 20px;
+  }
+  h1 {
+    color: #58a6ff;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+  #top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  #globalStats, #userStats {
+    background: #161b22;
+    border: 1px solid #30363d;
+    padding: 10px 15px;
+    border-radius: 6px;
+    width: 250px;
+    font-size: 16px;
+  }
+  #globalStats {
+    color: #c9d1d9;
+  }
+  #globalStats .losses {
+    color: #ff5555;
+    font-weight: 700;
+  }
+  #userInfo {
+    max-width: 300px;
+    text-align: right;
+  }
+  #userEmail {
+    margin-bottom: 6px;
+  }
+  #logoutBtn {
+    background: #30363d;
+    border: 1px solid #21262d;
+    color: #c9d1d9;
+    padding: 6px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  #authPanel {
+    background: #161b22;
+    border: 1px solid #30363d;
+    padding: 10px 15px;
+    border-radius: 6px;
+    max-width: 300px;
+    margin-left: auto;
+  }
+  #authPanel input {
+    width: 100%;
+    margin-bottom: 8px;
+    padding: 8px;
+    background: #0d1117;
+    border: 1px solid #30363d;
+    color: #c9d1d9;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  #authPanel button {
+    width: 48%;
+    margin-right: 4%;
+    background: #21262d;
+    border: 1px solid #30363d;
+    color: #c9d1d9;
+    padding: 8px 0;
+    font-size: 14px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  #authPanel button:last-child {
+    margin-right: 0;
+  }
+
+  #board {
+    display: grid;
+    grid-template-columns: repeat(3, 100px);
+    grid-template-rows: repeat(3, 100px);
+    gap: 6px;
+    justify-content: center;
+    margin: 20px auto;
+  }
+  .cell {
+    background: #161b22;
+    border: 1px solid #30363d;
+    font-size: 48px;
+    color: #58a6ff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    border-radius: 6px;
+    transition: background-color 0.3s;
+  }
+  .cell:hover {
+    background-color: #21262d;
+  }
+  #status {
+    text-align: center;
+    margin-top: 10px;
+    font-size: 18px;
+    min-height: 24px;
+  }
+  #newGameBtn {
+    display: block;
+    margin: 10px auto 0 auto;
+    padding: 8px 20px;
+    font-size: 16px;
+    background: #21262d;
+    color: #c9d1d9;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+</style>
 </head>
 <body>
-  <h1>Крестики-нолики</h1>
 
-  <div id="authPanel">
-    <input type="email" id="email" placeholder="Email" />
-    <input type="password" id="password" placeholder="Пароль" />
-    <button id="registerBtn">Регистрация</button>
-    <button id="loginBtn">Вход</button>
-    <button id="logoutBtn" style="display:none;">Выход</button>
-    <div id="user"></div>
-  </div>
+<h1>Крестики-нолики с Firebase</h1>
 
-  <div id="container">
-    <div id="statsAll">
-      <strong>Общая статистика игроков</strong>
-      <div>Побед: <span id="allWins">0</span></div>
-      <div>Поражений: <span id="allLosses" class="highlight-losses">0</span></div>
-      <div>Ничьих: <span id="allDraws">0</span></div>
-    </div>
-    <div id="statsUser">
-      <strong>Ваша статистика</strong>
-      <div>Побед: <span id="userWins">0</span></div>
-      <div>Поражений: <span id="userLosses">0</span></div>
-      <div>Ничьих: <span id="userDraws">0</span></div>
+<div id="top-bar">
+  <div id="globalStats">
+    <div><strong>Общая статистика игроков</strong></div>
+    <div>Победы: <span id="allWins">0</span></div>
+    <div>Поражения: <span id="allLosses" class="losses">0</span></div>
+    <div>Ничьи: <span id="allDraws">0</span></div>
+    <div style="margin-top:10px; font-weight:bold; color:#ff5555;">
+      Поражений бота: <span id="botLosses">0</span>
     </div>
   </div>
 
-  <div id="board"></div>
-  <div id="status">Ход игрока</div>
+  <div id="userInfo">
+    <div id="userEmail"></div>
+    <button id="logoutBtn" style="display:none;">Выйти</button>
+    <div id="userStats" style="margin-top:10px;">
+      <div><strong>Ваша статистика</strong></div>
+      <div>Победы: <span id="userWins">0</span></div>
+      <div>Поражения: <span id="userLosses">0</span></div>
+      <div>Ничьи: <span id="userDraws">0</span></div>
+    </div>
+  </div>
+</div>
 
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<div id="authPanel">
+  <input type="email" id="email" placeholder="Email" />
+  <input type="password" id="password" placeholder="Пароль" />
+  <button id="registerBtn">Регистрация</button>
+  <button id="loginBtn">Войти</button>
+</div>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyB44W1CnyyftFFxskgbhFvtCuOvBVN6Xyk",
-      authDomain: "crossnull-cc1c8.firebaseapp.com",
-      projectId: "crossnull-cc1c8",
-      storageBucket: "crossnull-cc1c8.appspot.com",
-      messagingSenderId: "504007695287",
-      appId: "1:504007695287:web:1e30750b9518070adfa632"
-    };
+<div id="board"></div>
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+<div id="status"></div>
+<button id="newGameBtn" style="display:none;">Новая игра</button>
 
-    const emailEl = document.getElementById("email");
-    const passwordEl = document.getElementById("password");
-    const userEl = document.getElementById("user");
-    const logoutBtn = document.getElementById("logoutBtn");
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+  // Инициализация Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyB44W1CnyyftFFxskgbhFvtCuOvBVN6Xyk",
+    authDomain: "crossnull-cc1c8.firebaseapp.com",
+    projectId: "crossnull-cc1c8",
+    storageBucket: "crossnull-cc1c8.appspot.com",
+    messagingSenderId: "504007695287",
+    appId: "1:504007695287:web:1e30750b9518070adfa632"
+  };
+  firebase.initializeApp(firebaseConfig);
 
-    const allWinsEl = document.getElementById("allWins");
-    const allLossesEl = document.getElementById("allLosses");
-    const allDrawsEl = document.getElementById("allDraws");
+  const auth = firebase.auth();
+  const db = firebase.firestore();
 
-    const userWinsEl = document.getElementById("userWins");
-    const userLossesEl = document.getElementById("userLosses");
-    const userDrawsEl = document.getElementById("userDraws");
+  // Элементы
+  const emailEl = document.getElementById("email");
+  const passwordEl = document.getElementById("password");
+  const authPanel = document.getElementById("authPanel");
+  const userEmailEl = document.getElementById("userEmail");
+  const logoutBtn = document.getElementById("logoutBtn");
 
-    const board = document.getElementById("board");
-    const statusEl = document.getElementById("status");
+  const allWinsEl = document.getElementById("allWins");
+  const allLossesEl = document.getElementById("allLosses");
+  const allDrawsEl = document.getElementById("allDraws");
+  const botLossesEl = document.getElementById("botLosses");
 
-    let cells = Array(9).fill(null);
-    let playerTurn = true;
-    let gameOver = false;
+  const userWinsEl = document.getElementById("userWins");
+  const userLossesEl = document.getElementById("userLosses");
+  const userDrawsEl = document.getElementById("userDraws");
 
-    // Регистрация и вход
-    document.getElementById("registerBtn").addEventListener("click", () => {
-      const email = emailEl.value.trim();
-      const password = passwordEl.value;
-      if (!email || !password) {
-        alert("Введите email и пароль");
-        return;
-      }
-      auth.createUserWithEmailAndPassword(email, password)
-        .then(() => alert("Регистрация успешна"))
-        .catch(e => alert("Ошибка: " + e.message));
-    });
+  const boardEl = document.getElementById("board");
+  const statusEl = document.getElementById("status");
+  const newGameBtn = document.getElementById("newGameBtn");
 
-    document.getElementById("loginBtn").addEventListener("click", () => {
-      const email = emailEl.value.trim();
-      const password = passwordEl.value;
-      if (!email || !password) {
-        alert("Введите email и пароль");
-        return;
-      }
-      auth.signInWithEmailAndPassword(email, password)
-        .catch(e => alert("Ошибка: " + e.message));
-    });
+  // Переменные игры
+  let cells = Array(9).fill(null);
+  let playerTurn = true;
+  let gameOver = false;
 
-    logoutBtn.addEventListener("click", () => {
-      auth.signOut();
-    });
+  // --- Функции регистрации и входа ---
+  document.getElementById("registerBtn").addEventListener("click", () => {
+    const email = emailEl.value.trim();
+    const pass = passwordEl.value.trim();
+    if (!email || !pass) { alert("Введите email и пароль"); return; }
+    auth.createUserWithEmailAndPassword(email, pass)
+      .then(({user}) => {
+        // Создаём статистику для пользователя
+        db.collection("stats").doc(user.uid).set({wins:0, losses:0, draws:0});
+        alert("Регистрация успешна! Войдите.");
+        emailEl.value = "";
+        passwordEl.value = "";
+      })
+      .catch(e => alert(e.message));
+  });
 
-    function resetGame() {
-      cells.fill(null);
-      playerTurn = true;
-      gameOver = false;
-      statusEl.textContent = "Ход игрока";
-      renderBoard();
+  document.getElementById("loginBtn").addEventListener("click", () => {
+    const email = emailEl.value.trim();
+    const pass = passwordEl.value.trim();
+    if (!email || !pass) { alert("Введите email и пароль"); return; }
+    auth.signInWithEmailAndPassword(email, pass).catch(e => alert(e.message));
+  });
+
+  logoutBtn.addEventListener("click", () => auth.signOut());
+
+  // --- Функция для обновления статистики на странице ---
+  function loadStats() {
+    const user = auth.currentUser;
+    if (!user) {
+      userWinsEl.textContent = 0;
+      userLossesEl.textContent = 0;
+      userDrawsEl.textContent = 0;
+      allWinsEl.textContent = 0;
+      allLossesEl.textContent = 0;
+      allDrawsEl.textContent = 0;
+      botLossesEl.textContent = 0;
+      return;
     }
 
-    function renderBoard() {
-      board.innerHTML = "";
-      for (let i = 0; i < 9; i++) {
-        const div = document.createElement("div");
-        div.className = "cell";
-        div.textContent = cells[i] || "";
-        div.addEventListener("click", () => {
-          if (gameOver || !playerTurn || cells[i]) return;
-          cells[i] = "X";
-          playerTurn = false;
-          renderBoard();
-          if (checkWinner(cells, "X")) {
-            statusEl.textContent = "Вы выиграли!";
-            updateStatsAfterGame("wins");
-            gameOver = true;
-            return;
-          }
-          if (!cells.includes(null)) {
-            statusEl.textContent = "Ничья";
-            updateStatsAfterGame("draws");
-            gameOver = true;
-            return;
-          }
-          setTimeout(() => {
-            botTurn();
-          }, 400);
-        });
-        board.appendChild(div);
-      }
-    }
-
-    function checkWinner(board, symbol) {
-      const winCombos = [
-        [0,1,2],[3,4,5],[6,7,8],
-        [0,3,6],[1,4,7],[2,5,8],
-        [0,4,8],[2,4,6]
-      ];
-      return winCombos.some(combo => combo.every(i => board[i] === symbol));
-    }
-
-    function botTurn() {
-      if (gameOver) return;
-      const move = botMove();
-      cells[move] = "O";
-      renderBoard();
-      if (checkWinner(cells, "O")) {
-        statusEl.textContent = "Бот победил!";
-        updateStatsAfterGame("losses");
-        gameOver = true;
-        return;
-      }
-      if (!cells.includes(null)) {
-        statusEl.textContent = "Ничья";
-        updateStatsAfterGame("draws");
-        gameOver = true;
-        return;
-      }
-      playerTurn = true;
-      statusEl.textContent = "Ход игрока";
-    }
-
-    function botMove() {
-      // Бот не проигрывает: сначала выиграть, если нельзя — заблокировать, иначе случайный ход
-      for (let i = 0; i < 9; i++) {
-        if (!cells[i]) {
-          cells[i] = "O";
-          if (checkWinner(cells, "O")) return i;
-          cells[i] = null;
-        }
-      }
-      for (let i = 0; i < 9; i++) {
-        if (!cells[i]) {
-          cells[i] = "X";
-          if (checkWinner(cells, "X")) {
-            cells[i] = "O";
-            return i;
-          }
-          cells[i] = null;
-        }
-      }
-      const empty = cells.map((c,i) => c ? null : i).filter(x => x !== null);
-      const move = empty[Math.floor(Math.random() * empty.length)];
-      return move;
-    }
-
-    // Обновление статистики в Firestore
-    function updateStatsAfterGame(field) {
-      const user = auth.currentUser;
-      if (!user) return;
-      // Обновляем личную статистику
-      db.collection("stats").doc(user.uid).set({
-        wins: 0,
-        losses: 0,
-        draws: 0
-      }, { merge: true }).then(() => {
-        return db.collection("stats").doc(user.uid).get();
-      }).then(doc => {
-        let data = doc.data();
-        data[field] = (data[field] || 0) + 1;
-        return db.collection("stats").doc(user.uid).set(data);
-      }).then(() => {
-        loadStats();
-      }).catch(console.error);
-
-      // Обновляем общую статистику (бот — проигрыши считаются поражениями для бота)
-      db.collection("stats").doc("global").set({
-        wins: 0,
-        losses: 0,
-        draws: 0
-      }, { merge: true }).then(() => {
-        return db.collection("stats").doc("global").get();
-      }).then(doc => {
-        let data = doc.data();
-        data[field] = (data[field] || 0) + 1;
-        return db.collection("stats").doc("global").set(data);
-      }).then(() => {
-        loadStats();
-      }).catch(console.error);
-    }
-
-    function loadStats() {
-      const user = auth.currentUser;
-      if (!user) return;
-      // Личная статистика
-      db.collection("stats").doc(user.uid).get()
-        .then(doc => {
-          const data = doc.exists ? doc.data() : {};
-          userWinsEl.textContent = data.wins || 0;
-          userLossesEl.textContent = data.losses || 0;
-          userDrawsEl.textContent = data.draws || 0;
-        }).catch(console.error);
-
-      // Общая статистика
-      db.collection("stats").doc("global").get()
-        .then(doc => {
-          const data = doc.exists ? doc.data() : {};
-          allWinsEl.textContent = data.wins || 0;
-          allLossesEl.textContent = data.losses || 0;
-          allDrawsEl.textContent = data.draws || 0;
-        }).catch(console.error);
-    }
-
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        userEl.textContent = "Вы вошли как: " + user.email;
-        logoutBtn.style.display = "inline-block";
-        loadStats();
+    // Личная статистика
+    db.collection("stats").doc(user.uid).get().then(doc => {
+      if (doc.exists) {
+        const data = doc.data();
+        userWinsEl.textContent = data.wins || 0;
+        userLossesEl.textContent = data.losses || 0;
+        userDrawsEl.textContent = data.draws || 0;
       } else {
-        userEl.textContent = "";
-        logoutBtn.style.display = "none";
         userWinsEl.textContent = 0;
         userLossesEl.textContent = 0;
         userDrawsEl.textContent = 0;
-        allWinsEl.textContent = 0;
-        allLossesEl.textContent = 0;
-        allDrawsEl.textContent = 0;
       }
-      resetGame();
     });
 
-    resetGame();
-  </script>
+    // Общая статистика - считаем все документы
+    db.collection("stats").get().then(snapshot => {
+      let wins = 0, losses = 0, draws = 0, botLosses = 0;
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        wins += d.wins || 0;
+        losses += d.losses || 0;
+        draws += d.draws || 0;
+        // Учитываем поражения бота - считаем, что бот всегда играет против всех пользователей
+        // Поражения бота = выигрыши пользователей
+        botLosses = wins;
+      });
+      allWinsEl.textContent = wins;
+      allLossesEl.textContent = losses;
+      allDrawsEl.textContent = draws;
+      botLossesEl.textContent = botLosses;
+    });
+  }
+
+  // --- Функции для игры ---
+
+  // Отрисовка доски
+  function renderBoard() {
+    boardEl.innerHTML = "";
+    for(let i=0; i<9; i++) {
+      const cell = document.createElement("div");
+      cell.className = "cell";
+      cell.dataset.index = i;
+      cell.textContent = cells[i] || "";
+      cell.addEventListener("click", onCellClick);
+      boardEl.appendChild(cell);
+    }
+  }
+
+  // Проверка победы
+  function checkWin(player) {
+    const winsLines = [
+      [0,1,2],[3,4,5],[6,7,8],
+      [0,3,6],[1,4,7],[2,5,8],
+      [0,4,8],[2,4,6]
+    ];
+    return winsLines.some(line => 
+      line.every(idx => cells[idx] === player)
+    );
+  }
+
+  // Проверка ничьи
+  function checkDraw() {
+    return cells.every(c => c !== null);
+  }
+
+  // Ход бота (не проигрывает, играет оптимально)
+  function botMove() {
+    // Минимакс с ограничением глубины для простоты
+
+    function minimax(board, isBotTurn) {
+      if (checkWin("O")) return {score: 10};
+      if (checkWin("X")) return {score: -10};
+      if (checkDraw()) return {score: 0};
+
+      const moves = [];
+      for (let i=0; i<9; i++) {
+        if (board[i] === null) {
+          const newBoard = board.slice();
+          newBoard[i] = isBotTurn ? "O" : "X";
+          const result = minimax(newBoard, !isBotTurn);
+          moves.push({index: i, score: result.score});
+        }
+      }
+      if (isBotTurn) {
+        // Максимизируем
+        let maxMove = moves.reduce((a,b) => a.score > b.score ? a : b);
+        return maxMove;
+      } else {
+        // Минимизируем
+        let minMove = moves.reduce((a,b) => a.score < b.score ? a : b);
+        return minMove;
+      }
+    }
+
+    const move = minimax(cells, true);
+    cells[move.index] = "O";
+  }
+
+  // Обработка клика по ячейке
+  function onCellClick(e) {
+    if (gameOver) return;
+    if (!auth.currentUser) {
+      alert("Войдите, чтобы играть");
+      return;
+    }
+    const idx = +e.target.dataset.index;
+    if (cells[idx] !== null) return;
+
+    // Ход игрока
+    cells[idx] = "X";
+    renderBoard();
+
+    if (checkWin("X")) {
+      statusEl.textContent = "Вы победили! (Не должно случиться, бот не проигрывает)";
+      gameOver = true;
+      updateStats("userWin");
+      showNewGame();
+      return;
+    }
+    if (checkDraw()) {
+      statusEl.textContent = "Ничья!";
+      gameOver = true;
+      updateStats("draw");
+      showNewGame();
+      return;
+    }
+
+    // Ход бота
+    botMove();
+    renderBoard();
+
+    if (checkWin("O")) {
+      statusEl.textContent = "Бот победил!";
+      gameOver = true;
+      updateStats("botWin");
+      showNewGame();
+      return;
+    }
+    if (checkDraw()) {
+      statusEl.textContent = "Ничья!";
+      gameOver = true;
+      updateStats("draw");
+      showNewGame();
+      return;
+    }
+  }
+
+  // Обновление статистики в Firestore
+  async function updateStats(result) {
+    const user = auth.currentUser;
+    if (!user) return;
+    const userRef = db.collection("stats").doc(user.uid);
+
+    await db.runTransaction(async (transaction) => {
+      const userDoc = await transaction.get(userRef);
+      let userStats = userDoc.exists ? userDoc.data() : {wins:0, losses:0, draws:0};
+      let globalWins = 0, globalLosses = 0, globalDraws = 0;
+
+      if (result === "userWin") {
+        userStats.wins = (userStats.wins || 0) + 1;
+      } else if (result === "botWin") {
+        userStats.losses = (userStats.losses || 0) + 1;
+      } else {
+        userStats.draws = (userStats.draws || 0) + 1;
+      }
+
+      transaction.set(userRef, userStats, {merge:true});
+    });
+
+    loadStats();
+  }
+
+  // Показать кнопку новая игра
+  function showNewGame() {
+    newGameBtn.style.display = "block";
+  }
+
+  newGameBtn.addEventListener("click", () => {
+    cells.fill(null);
+    playerTurn = true;
+    gameOver = false;
+    statusEl.textContent = "";
+    renderBoard();
+    newGameBtn.style.display = "none";
+  });
+
+  // Обновление UI при смене статуса аутентификации
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      authPanel.style.display = "none";
+      userEmailEl.textContent = user.email;
+      logoutBtn.style.display = "inline-block";
+      loadStats();
+      newGameBtn.style.display = "none";
+      cells.fill(null);
+      gameOver = false;
+      statusEl.textContent = "";
+      renderBoard();
+    } else {
+      authPanel.style.display = "block";
+      userEmailEl.textContent = "";
+      logoutBtn.style.display = "none";
+      userWinsEl.textContent = 0;
+      userLossesEl.textContent = 0;
+      userDrawsEl.textContent = 0;
+      allWinsEl.textContent = 0;
+      allLossesEl.textContent = 0;
+      allDrawsEl.textContent = 0;
+      botLossesEl.textContent = 0;
+      cells.fill(null);
+      gameOver = false;
+      statusEl.textContent = "Войдите, чтобы играть";
+      renderBoard();
+      newGameBtn.style.display = "none";
+    }
+  });
+
+  // Начальная отрисовка
+  renderBoard();
+</script>
+
 </body>
 </html>
