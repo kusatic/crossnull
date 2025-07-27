@@ -1,72 +1,48 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Крестики-нолики + Firebase</title>
   <style>
     body {
       background-color: #0d1117;
       color: #c9d1d9;
-      font-family: Arial, sans-serif;
+      font-family: sans-serif;
       text-align: center;
+      margin: 0;
       padding: 20px;
     }
-    #board {
-      display: grid;
-      grid-template-columns: repeat(3, 100px);
-      grid-gap: 5px;
-      justify-content: center;
-      margin: 20px auto;
-    }
+    h1 { color: #58a6ff; }
+    #board { display: grid; grid-template-columns: repeat(3, 100px); gap: 5px; justify-content: center; margin: 20px auto; }
     .cell {
-      width: 100px;
-      height: 100px;
-      background-color: #161b22;
-      border: 1px solid #30363d;
-      font-size: 2em;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .cell:hover {
-      background-color: #21262d;
-    }
-    #login-form {
-      margin-bottom: 20px;
-    }
-    button {
-      background-color: #238636;
-      color: white;
-      border: none;
-      padding: 10px;
-      margin: 5px;
+      width: 100px; height: 100px; background: #161b22; border: 1px solid #30363d;
+      font-size: 36px; display: flex; align-items: center; justify-content: center;
       cursor: pointer;
     }
-    button:hover {
-      background-color: #2ea043;
+    input, button {
+      margin: 5px; padding: 8px; font-size: 16px; background: #21262d; color: white; border: 1px solid #30363d;
     }
+    #status { margin: 10px; font-size: 18px; }
   </style>
 </head>
 <body>
-  <h1>Крестики-нолики + Firebase</h1>
-
-  <div id="login-form">
+  <h1>Крестики-нолики</h1>
+  <div>
     <input type="email" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Пароль">
     <button onclick="register()">Регистрация</button>
-    <button onclick="login()">Войти</button>
-    <button onclick="logout()">Выйти</button>
+    <button onclick="login()">Вход</button>
+    <button onclick="logout()">Выход</button>
   </div>
+  <div id="user"></div>
 
-  <div id="user-info"></div>
-  <h2 id="status"></h2>
   <div id="board"></div>
+  <div id="status">Ход игрока</div>
 
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyB44W1CnyyftFFxskgbhFvtCuOvBVN6Xyk",
@@ -76,113 +52,97 @@
       messagingSenderId: "504007695287",
       appId: "1:504007695287:web:1e30750b9518070adfa632"
     };
-
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
-    const db = firebase.firestore();
-
-    let board = Array(9).fill("");
-    let user = null;
-
-    const cells = [];
-
-    function renderBoard() {
-      const boardEl = document.getElementById("board");
-      boardEl.innerHTML = "";
-      for (let i = 0; i < 9; i++) {
-        const cell = document.createElement("div");
-        cell.className = "cell";
-        cell.innerText = board[i];
-        cell.onclick = () => playerMove(i);
-        boardEl.appendChild(cell);
-        cells[i] = cell;
-      }
-    }
-
-    function checkWinner(b) {
-      const win = [
-        [0,1,2],[3,4,5],[6,7,8],
-        [0,3,6],[1,4,7],[2,5,8],
-        [0,4,8],[2,4,6]
-      ];
-      for (let [a,b1,c] of win) {
-        if (b[a] && b[a] === b[b1] && b[a] === b[c]) return b[a];
-      }
-      return b.includes("") ? null : "draw";
-    }
-
-    function playerMove(i) {
-      if (!user || board[i]) return;
-      board[i] = "X";
-      renderBoard();
-      let res = checkWinner(board);
-      if (res) return endGame(res);
-      setTimeout(botMove, 300);
-    }
-
-    function botMove() {
-      // Simple unbeatable bot: center > win > block > random
-      const empty = board.map((v,i) => v === "" ? i : null).filter(x => x !== null);
-      let best = empty.find(i => {
-        let test = [...board]; test[i] = "O";
-        return checkWinner(test) === "O";
-      }) || empty.find(i => {
-        let test = [...board]; test[i] = "X";
-        return checkWinner(test) === "X";
-      }) || (board[4] === "" ? 4 : null) || empty[Math.floor(Math.random()*empty.length)];
-      board[best] = "O";
-      renderBoard();
-      let res = checkWinner(board);
-      if (res) return endGame(res);
-    }
-
-    function endGame(result) {
-      let msg = result === "draw" ? "Ничья!" : (result === "X" ? "Вы выиграли!" : "Вы проиграли!");
-      document.getElementById("status").innerText = msg;
-      if (user) {
-        const ref = db.collection("stats").doc(user.uid);
-        ref.get().then(doc => {
-          let data = doc.exists ? doc.data() : { win: 0, lose: 0, draw: 0 };
-          if (result === "X") data.win++;
-          else if (result === "O") data.lose++;
-          else data.draw++;
-          ref.set(data);
-        });
-      }
-    }
-
-    function resetGame() {
-      board = Array(9).fill("");
-      document.getElementById("status").innerText = "";
-      renderBoard();
-    }
 
     function register() {
       const email = document.getElementById("email").value;
-      const pass = document.getElementById("password").value;
-      auth.createUserWithEmailAndPassword(email, pass).catch(alert);
+      const password = document.getElementById("password").value;
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(() => alert("Регистрация успешна"))
+        .catch(e => alert(e.message));
     }
 
     function login() {
       const email = document.getElementById("email").value;
-      const pass = document.getElementById("password").value;
-      auth.signInWithEmailAndPassword(email, pass).catch(alert);
+      const password = document.getElementById("password").value;
+      auth.signInWithEmailAndPassword(email, password)
+        .catch(e => alert(e.message));
     }
 
     function logout() {
       auth.signOut();
     }
 
-    auth.onAuthStateChanged(u => {
-      user = u;
-      const info = document.getElementById("user-info");
-      if (u) {
-        info.innerText = `Вы вошли как ${u.email}`;
-        resetGame();
-      } else {
-        info.innerText = "Вы не авторизованы";
-      }
+    auth.onAuthStateChanged(user => {
+      document.getElementById("user").innerText = user ? `Вы вошли как ${user.email}` : "Вы не вошли";
     });
+
+    // --- Крестики-нолики ---
+    const board = document.getElementById("board");
+    let cells = Array(9).fill(null);
+    let playerTurn = true;
+
+    function checkWinner(board, symbol) {
+      const winCombos = [
+        [0,1,2], [3,4,5], [6,7,8],
+        [0,3,6], [1,4,7], [2,5,8],
+        [0,4,8], [2,4,6]
+      ];
+      return winCombos.some(combo => combo.every(i => board[i] === symbol));
+    }
+
+    function botMove() {
+      for (let i = 0; i < 9; i++) {
+        if (!cells[i]) {
+          cells[i] = "O";
+          if (checkWinner(cells, "O")) return i;
+          cells[i] = null;
+        }
+      }
+      for (let i = 0; i < 9; i++) {
+        if (!cells[i]) {
+          cells[i] = "X";
+          if (checkWinner(cells, "X")) {
+            cells[i] = "O";
+            return i;
+          }
+          cells[i] = null;
+        }
+      }
+      const empty = cells.map((c, i) => c ? null : i).filter(x => x !== null);
+      const move = empty[Math.floor(Math.random() * empty.length)];
+      cells[move] = "O";
+      return move;
+    }
+
+    function renderBoard() {
+      board.innerHTML = "";
+      for (let i = 0; i < 9; i++) {
+        const div = document.createElement("div");
+        div.className = "cell";
+        div.innerText = cells[i] || "";
+        div.onclick = () => {
+          if (!cells[i] && playerTurn) {
+            cells[i] = "X";
+            playerTurn = false;
+            renderBoard();
+            if (checkWinner(cells, "X")) return setStatus("Вы выиграли!");
+            if (!cells.includes(null)) return setStatus("Ничья");
+            const bot = botMove();
+            renderBoard();
+            if (checkWinner(cells, "O")) return setStatus("Бот победил!");
+            if (!cells.includes(null)) return setStatus("Ничья");
+            playerTurn = true;
+          }
+        };
+        board.appendChild(div);
+      }
+    }
+
+    function setStatus(text) {
+      document.getElementById("status").innerText = text;
+    }
 
     renderBoard();
   </script>
