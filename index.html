@@ -365,15 +365,16 @@
 }
 
     function updateGlobalStats(field) {
-      const globalRef = db.ref("globalStats");
-      globalRef.transaction((stats) => {
-        if (stats == null) {
-          stats = { wins: 0, losses: 0, draws: 0 };
-        }
-        stats[field] = (stats[field] || 0) + 1;
-        return stats;
-      });
-    }
+  const globalRef = db.ref("globalStats");
+  globalRef.transaction((stats) => {
+    if (!stats) stats = { wins: 0, losses: 0, draws: 0 };
+    stats[field] = (stats[field] || 0) + 1;
+    stats.lastUpdated = firebase.database.ServerValue.TIMESTAMP;
+    return stats;
+  }, (error) => {
+    if (error) console.error("Ошибка обновления globalStats:", error);
+  });
+}
 
     function displayStats(userStats, globalStats) {
       if (userStats) {
