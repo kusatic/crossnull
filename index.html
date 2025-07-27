@@ -354,16 +354,15 @@
 
     // Работа с Firebase статистикой
     function updateUserStats(field) {
-      if (!currentUser) return;
-      const statsRef = db.ref("users/" + currentUser.uid + "/stats");
-      statsRef.transaction((stats) => {
-        if (stats == null) {
-          stats = { wins: 0, losses: 0, draws: 0 };
-        }
-        stats[field] = (stats[field] || 0) + 1;
-        return stats;
-      });
-    }
+  if (!currentUser) return;
+  const statsRef = db.ref("users/" + currentUser.uid + "/stats");
+  statsRef.transaction((stats) => {
+    if (!stats) stats = { wins: 0, losses: 0, draws: 0 };
+    stats[field] = (stats[field] || 0) + 1;
+    stats.lastUpdated = firebase.database.ServerValue.TIMESTAMP;
+    return stats;
+  });
+}
 
     function updateGlobalStats(field) {
       const globalRef = db.ref("globalStats");
