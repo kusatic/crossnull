@@ -316,7 +316,7 @@
           const botIndex = botMove();
           renderBoard();
           if (checkWinner(cells, "O")) {
-            setStatus("Бот победил!");
+            setStatus("Бот победил! Все ваши базы принадлежат уничижителю!");
             gameOver = true;
             updateUserStats("losses");
             updateGlobalStats("losses");
@@ -386,7 +386,7 @@
       }
       if (globalStats) {
         statsAllEl.innerHTML = `<br>
-          Побед: ${globalStats.wins || 0}<br>
+          ПОБЕД ИГРОКАМИ: ${globalStats.wins || 0}<br>
           Поражений: ${globalStats.losses || 0}<br>
           Ничьих: ${globalStats.draws || 0}`;
       } else {
