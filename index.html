@@ -6,242 +6,246 @@
   <title>Крестики-нолики</title>
   <style>
     body {
-      background-color: #0d1117;
-      color: #c9d1d9;
-      font-family: 'Segoe UI', sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
       margin: 0;
-    }
-
-    #game {
-      background-color: #161b22;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.5);
-      text-align: center;
-    }
-
-    h1 {
-      color: #f0f6fc;
-      margin-bottom: 10px;
-    }
-
-    table {
-      margin: 20px auto;
-      border-collapse: collapse;
-    }
-
-    td {
-      width: 80px;
-      height: 80px;
-      font-size: 40px;
-      border: 1px solid #30363d;
-      text-align: center;
-      vertical-align: middle;
-      cursor: pointer;
       background-color: #0d1117;
       color: #c9d1d9;
-      transition: background-color 0.2s;
+      font-family: sans-serif;
+      text-align: center;
     }
-
-    td:hover {
-      background-color: #21262d;
+    h1 { margin-top: 20px; }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-gap: 5px;
+      justify-content: center;
+      margin: 20px auto;
     }
-
-    #status {
-      margin-top: 10px;
-      font-size: 18px;
-      color: #8b949e;
-    }
-
-    button {
-      margin-top: 15px;
-      padding: 10px 20px;
-      background-color: #238636;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-size: 16px;
+    .cell {
+      width: 100px;
+      height: 100px;
+      background: #161b22;
+      color: #fff;
+      font-size: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       cursor: pointer;
+      border: 1px solid #30363d;
     }
-
-    button:hover {
-      background-color: #2ea043;
-    }
-
-    #scoreboard {
+    .cell:hover { background: #21262d; }
+    #auth {
       margin-top: 20px;
-      font-size: 16px;
+    }
+    input {
+      background: #0d1117;
+      border: 1px solid #30363d;
       color: #c9d1d9;
+      padding: 5px;
+      margin: 5px;
+    }
+    button {
+      background: #238636;
+      color: white;
+      padding: 5px 10px;
+      border: none;
+      cursor: pointer;
+      margin: 5px;
+    }
+    #stats {
+      margin-top: 20px;
     }
   </style>
 </head>
 <body>
-  <div id="game">
-    <h1>Крестики-нолики</h1>
-    <table id="board"></table>
-    <div id="status"></div>
-    <button onclick="startGame()">Новая игра</button>
-    <div id="scoreboard">
-      👤 Вы: <span id="wins">0</span> |
-      🤖 Бот: <span id="losses">0</span> |
-      🤝 Ничья: <span id="draws">0</span>
+  <h1>Крестики-нолики (Firebase)</h1>
+
+  <div id="auth">
+    <div id="user-form">
+      <input type="email" id="email" placeholder="Email">
+      <input type="password" id="password" placeholder="Пароль">
+      <button onclick="register()">Регистрация</button>
+      <button onclick="login()">Войти</button>
+    </div>
+    <div id="user-info" style="display:none;">
+      👤 <span id="user-email"></span>
+      <button onclick="logout()">Выйти</button>
     </div>
   </div>
 
-  <script>
-    let board = [];
-    const human = 'X';
-    const ai = 'O';
-    let gameOver = false;
+  <div id="stats" style="display:none;">
+    <h3>Ваша статистика:</h3>
+    Побед: <span id="wins">0</span> |
+    Поражений: <span id="losses">0</span>
+  </div>
 
-    let wins = 0;
-    let losses = 0;
-    let draws = 0;
+  <div class="board" id="board"></div>
+  <p id="status"></p>
 
-    function updateScoreboard() {
-      document.getElementById('wins').textContent = wins;
-      document.getElementById('losses').textContent = losses;
-      document.getElementById('draws').textContent = draws;
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB44W1CnyyftFFxskgbhFvtCuOvBVN6Xyk",
+      authDomain: "crossnull-cc1c8.firebaseapp.com",
+      projectId: "crossnull-cc1c8",
+      storageBucket: "crossnull-cc1c8.firebasestorage.app",
+      messagingSenderId: "504007695287",
+      appId: "1:504007695287:web:1e30750b9518070adfa632"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const boardEl = document.getElementById('board');
+    const statusEl = document.getElementById('status');
+    let board = ["", "", "", "", "", "", "", "", ""];
+    let currentUser = null;
+
+    function renderBoard() {
+      boardEl.innerHTML = "";
+      board.forEach((cell, i) => {
+        const div = document.createElement('div');
+        div.className = 'cell';
+        div.innerText = cell;
+        div.onclick = () => handleMove(i);
+        boardEl.appendChild(div);
+      });
     }
 
-    function createBoard() {
-      const table = document.getElementById('board');
-      table.innerHTML = '';
-      board = [];
-      for (let i = 0; i < 3; i++) {
-        const row = [];
-        const tr = document.createElement('tr');
-        for (let j = 0; j < 3; j++) {
-          const td = document.createElement('td');
-          td.addEventListener('click', () => playerMove(i, j));
-          tr.appendChild(td);
-          row.push('');
-        }
-        table.appendChild(tr);
-        board.push(row);
+    function handleMove(index) {
+      if (board[index] !== "" || checkWinner(board)) return;
+      board[index] = "X";
+      if (checkWinner(board)) {
+        statusEl.innerText = "Вы победили!";
+        updateStats("win");
+        return renderBoard();
       }
-      setStatus("Ваш ход (X)");
-      gameOver = false;
-    }
-
-    function setStatus(msg) {
-      document.getElementById('status').textContent = msg;
-    }
-
-    function playerMove(i, j) {
-      if (board[i][j] || gameOver) return;
-      board[i][j] = human;
-      updateBoard();
-      if (checkWinner(human)) {
-        setStatus("Вы победили! 🎉");
-        wins++;
-        gameOver = true;
-        updateScoreboard();
-      } else if (isDraw()) {
-        setStatus("Ничья 🤝");
-        draws++;
-        gameOver = true;
-        updateScoreboard();
-      } else {
-        setStatus("Ход бота (O)...");
-        setTimeout(botMove, 300);
+      if (board.every(cell => cell !== "")) {
+        statusEl.innerText = "Ничья!";
+        return renderBoard();
       }
+      botMove();
+      if (checkWinner(board)) {
+        statusEl.innerText = "Бот победил!";
+        updateStats("loss");
+      }
+      renderBoard();
     }
 
     function botMove() {
-      const best = minimax(board, ai);
-      board[best.i][best.j] = ai;
-      updateBoard();
-      if (checkWinner(ai)) {
-        setStatus("Бот победил! 🤖");
-        losses++;
-        gameOver = true;
-        updateScoreboard();
-      } else if (isDraw()) {
-        setStatus("Ничья 🤝");
-        draws++;
-        gameOver = true;
-        updateScoreboard();
+      let move = bestMove([...board]);
+      if (move !== undefined) board[move] = "O";
+    }
+
+    function bestMove(b) {
+      const winPatterns = [
+        [0,1,2],[3,4,5],[6,7,8],
+        [0,3,6],[1,4,7],[2,5,8],
+        [0,4,8],[2,4,6]
+      ];
+      for (let p of winPatterns) {
+        const [a,b1,c] = p;
+        if (b[a] === "O" && b[b1] === "O" && b[c] === "") return c;
+        if (b[a] === "O" && b[c] === "O" && b[b1] === "") return b1;
+        if (b[b1] === "O" && b[c] === "O" && b[a] === "") return a;
+      }
+      for (let p of winPatterns) {
+        const [a,b1,c] = p;
+        if (b[a] === "X" && b[b1] === "X" && b[c] === "") return c;
+        if (b[a] === "X" && b[c] === "X" && b[b1] === "") return b1;
+        if (b[b1] === "X" && b[c] === "X" && b[a] === "") return a;
+      }
+      return b.findIndex(cell => cell === "");
+    }
+
+    function checkWinner(b) {
+      const winPatterns = [
+        [0,1,2],[3,4,5],[6,7,8],
+        [0,3,6],[1,4,7],[2,5,8],
+        [0,4,8],[2,4,6]
+      ];
+      return winPatterns.some(([a,b1,c]) =>
+        b[a] && b[a] === b[b1] && b[a] === b[c]
+      );
+    }
+
+    function resetGame() {
+      board = ["", "", "", "", "", "", "", "", ""];
+      statusEl.innerText = "";
+      renderBoard();
+    }
+
+    async function updateStats(result) {
+      if (!currentUser) return;
+      const ref = doc(db, "users", currentUser.uid);
+      const snap = await getDoc(ref);
+      if (!snap.exists()) return;
+      let data = snap.data();
+      data.wins = data.wins || 0;
+      data.losses = data.losses || 0;
+      if (result === "win") data.wins += 1;
+      if (result === "loss") data.losses += 1;
+      await updateDoc(ref, data);
+      document.getElementById("wins").innerText = data.wins;
+      document.getElementById("losses").innerText = data.losses;
+    }
+
+    async function login() {
+      const email = document.getElementById("email").value;
+      const pass = document.getElementById("password").value;
+      try {
+        await signInWithEmailAndPassword(auth, email, pass);
+      } catch (e) {
+        alert("Ошибка входа: " + e.message);
+      }
+    }
+
+    async function register() {
+      const email = document.getElementById("email").value;
+      const pass = document.getElementById("password").value;
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, email, pass);
+        await setDoc(doc(db, "users", cred.user.uid), {
+          email: email,
+          wins: 0,
+          losses: 0
+        });
+      } catch (e) {
+        alert("Ошибка регистрации: " + e.message);
+      }
+    }
+
+    async function logout() {
+      await signOut(auth);
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      currentUser = user;
+      if (user) {
+        document.getElementById("user-form").style.display = "none";
+        document.getElementById("user-info").style.display = "block";
+        document.getElementById("stats").style.display = "block";
+        document.getElementById("user-email").innerText = user.email;
+        const ref = doc(db, "users", user.uid);
+        const snap = await getDoc(ref);
+        if (snap.exists()) {
+          const data = snap.data();
+          document.getElementById("wins").innerText = data.wins;
+          document.getElementById("losses").innerText = data.losses;
+        }
       } else {
-        setStatus("Ваш ход (X)");
+        document.getElementById("user-form").style.display = "block";
+        document.getElementById("user-info").style.display = "none";
+        document.getElementById("stats").style.display = "none";
       }
-    }
+      resetGame();
+    });
 
-    function updateBoard() {
-      const table = document.getElementById('board');
-      for (let i = 0; i < 3; i++) {
-        for (let j = 0; j < 3; j++) {
-          table.rows[i].cells[j].textContent = board[i][j];
-        }
-      }
-    }
-
-    function isDraw() {
-      return board.flat().every(cell => cell);
-    }
-
-    function checkWinner(player) {
-      for (let i = 0; i < 3; i++) {
-        if (board[i][0] === player && board[i][1] === player && board[i][2] === player) return true;
-        if (board[0][i] === player && board[1][i] === player && board[2][i] === player) return true;
-      }
-      if (board[0][0] === player && board[1][1] === player && board[2][2] === player) return true;
-      if (board[0][2] === player && board[1][1] === player && board[2][0] === player) return true;
-      return false;
-    }
-
-    function minimax(newBoard, player) {
-      if (checkWinner(human)) return { score: -10 };
-      if (checkWinner(ai)) return { score: 10 };
-      if (isDraw()) return { score: 0 };
-
-      const moves = [];
-
-      for (let i = 0; i < 3; i++) {
-        for (let j = 0; j < 3; j++) {
-          if (newBoard[i][j] === '') {
-            const move = { i, j };
-            newBoard[i][j] = player;
-            const result = minimax(newBoard, player === ai ? human : ai);
-            move.score = result.score;
-            newBoard[i][j] = '';
-            moves.push(move);
-          }
-        }
-      }
-
-      let bestMove;
-      if (player === ai) {
-        let bestScore = -Infinity;
-        for (let move of moves) {
-          if (move.score > bestScore) {
-            bestScore = move.score;
-            bestMove = move;
-          }
-        }
-      } else {
-        let bestScore = Infinity;
-        for (let move of moves) {
-          if (move.score < bestScore) {
-            bestScore = move.score;
-            bestMove = move;
-          }
-        }
-      }
-
-      return bestMove;
-    }
-
-    function startGame() {
-      createBoard();
-    }
-
-    startGame();
-    updateScoreboard();
+    renderBoard();
   </script>
 </body>
 </html>
