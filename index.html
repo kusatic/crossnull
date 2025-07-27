@@ -8,215 +8,261 @@
     body {
       background-color: #0d1117;
       color: #c9d1d9;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-        Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+      font-family: sans-serif;
       margin: 0;
       padding: 20px;
     }
     h1 {
       color: #58a6ff;
       text-align: center;
-      margin-bottom: 20px;
     }
     #container {
       display: flex;
       justify-content: space-between;
+      max-width: 600px;
+      margin: 0 auto 20px;
       gap: 20px;
-      max-width: 900px;
-      margin: 0 auto;
     }
-    #statsAllPanel {
-      flex: 1 1 200px;
+    #statsAll, #statsUser {
       background: #161b22;
+      border: 1px solid #30363d;
       padding: 15px;
       border-radius: 8px;
-      min-width: 200px;
-      height: fit-content;
+      width: 48%;
+      font-size: 16px;
     }
-    #rightPanel {
-      flex: 1 1 250px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      min-width: 250px;
+    #statsAll strong, #statsUser strong {
+      display: block;
+      font-size: 18px;
+      margin-bottom: 8px;
+      color: #58a6ff;
     }
-    #loginPanel {
-      background: #161b22;
-      padding: 15px;
-      border-radius: 8px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+    .highlight-losses {
+      color: #ff6c6c;
+      font-weight: 700;
     }
     #authPanel {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      width: 100%;
+      text-align: right;
+      max-width: 600px;
+      margin: 0 auto 20px;
     }
-    #authPanel input,
-    #authPanel button {
-      width: 100%;
-      box-sizing: border-box;
+    #authPanel input, #authPanel button {
+      margin: 5px;
+      padding: 8px;
+      font-size: 16px;
+      background: #21262d;
+      color: white;
+      border: 1px solid #30363d;
+      border-radius: 5px;
     }
     #logoutBtn {
-      margin-top: 10px;
-      width: 100%;
+      margin-left: 10px;
+      padding: 8px 12px;
+      font-size: 16px;
+      background: #bf4040;
+      border: none;
+      border-radius: 5px;
+      color: white;
+      cursor: pointer;
     }
-    #statsUserPanel {
-      background: #161b22;
-      padding: 15px;
-      border-radius: 8px;
-      min-height: 120px;
-    }
-    #gamePanel {
-      flex: 2 1 400px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+    #user {
+      color: #8b949e;
+      font-size: 14px;
+      margin-top: 5px;
     }
     #board {
       display: grid;
       grid-template-columns: repeat(3, 100px);
       gap: 5px;
-      margin-bottom: 15px;
+      justify-content: center;
+      margin: 0 auto 20px;
     }
     .cell {
       width: 100px;
       height: 100px;
       background: #161b22;
       border: 1px solid #30363d;
-      font-size: 50px;
+      font-size: 36px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       user-select: none;
     }
-    .cell:hover {
-      background: #21262d;
-    }
-    button,
-    input {
-      background: #21262d;
-      color: white;
-      border: 1px solid #30363d;
-      border-radius: 5px;
-      font-size: 16px;
-      padding: 8px;
-    }
-    button:hover {
-      background: #30363d;
-    }
     #status {
+      text-align: center;
       font-size: 18px;
-      margin-bottom: 10px;
-      min-height: 24px;
+      margin-bottom: 15px;
     }
   </style>
 </head>
 <body>
-  <h1>Крестики-нолики с идеальным ботом</h1>
+  <h1>Крестики-нолики</h1>
+
+  <div id="authPanel">
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Пароль" />
+    <button id="registerBtn">Регистрация</button>
+    <button id="loginBtn">Вход</button>
+    <button id="logoutBtn" style="display:none;">Выход</button>
+    <div id="user"></div>
+  </div>
 
   <div id="container">
-    <div id="statsAllPanel">
-      <strong>Общая статистика:</strong>
-      <div id="statsAll">Загрузка...</div>
+    <div id="statsAll">
+      <strong>Общая статистика игроков</strong>
+      <div>Побед: <span id="allWins">0</span></div>
+      <div>Поражений: <span id="allLosses" class="highlight-losses">0</span></div>
+      <div>Ничьих: <span id="allDraws">0</span></div>
     </div>
-
-    <div id="gamePanel">
-      <div id="board"></div>
-      <button id="newGameBtn">Новая игра</button>
-      <div id="status">Ваш ход</div>
-    </div>
-
-    <div id="rightPanel">
-      <div id="loginPanel">
-        <div id="authPanel">
-          <input
-            type="email"
-            id="email"
-            placeholder="Email"
-            autocomplete="username"
-          />
-          <input
-            type="password"
-            id="password"
-            placeholder="Пароль"
-            autocomplete="current-password"
-          />
-          <button id="registerBtn">Регистрация</button>
-          <button id="loginBtn">Вход</button>
-        </div>
-        <button id="logoutBtn" style="display: none">Выход</button>
-        <div id="user" style="margin-top: 15px; color: #58a6ff"></div>
-      </div>
-
-      <div id="statsUserPanel">
-        <strong>Ваша статистика:</strong>
-        <div id="stats">Загрузка...</div>
-      </div>
+    <div id="statsUser">
+      <strong>Ваша статистика</strong>
+      <div>Побед: <span id="userWins">0</span></div>
+      <div>Поражений: <span id="userLosses">0</span></div>
+      <div>Ничьих: <span id="userDraws">0</span></div>
     </div>
   </div>
 
-  <!-- Firebase -->
+  <div id="board"></div>
+  <div id="status">Ход игрока</div>
+
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyB44W1CnyyftFFxskgbhFvtCuOvBVN6Xyk",
       authDomain: "crossnull-cc1c8.firebaseapp.com",
-      databaseURL:
-        "https://crossnull-cc1c8-default-rtdb.firebaseio.com",
       projectId: "crossnull-cc1c8",
       storageBucket: "crossnull-cc1c8.appspot.com",
       messagingSenderId: "504007695287",
-      appId: "1:504007695287:web:1e30750b9518070adfa632",
+      appId: "1:504007695287:web:1e30750b9518070adfa632"
     };
 
     firebase.initializeApp(firebaseConfig);
-
     const auth = firebase.auth();
-    const db = firebase.database();
+    const db = firebase.firestore();
 
     const emailEl = document.getElementById("email");
     const passwordEl = document.getElementById("password");
     const userEl = document.getElementById("user");
-    const statsEl = document.getElementById("stats");
-    const statsAllEl = document.getElementById("statsAll");
-    const authPanel = document.getElementById("authPanel");
     const logoutBtn = document.getElementById("logoutBtn");
 
-    let currentUser = null;
+    const allWinsEl = document.getElementById("allWins");
+    const allLossesEl = document.getElementById("allLosses");
+    const allDrawsEl = document.getElementById("allDraws");
 
-    // Инициализация игры
+    const userWinsEl = document.getElementById("userWins");
+    const userLossesEl = document.getElementById("userLosses");
+    const userDrawsEl = document.getElementById("userDraws");
+
     const board = document.getElementById("board");
     const statusEl = document.getElementById("status");
-    const newGameBtn = document.getElementById("newGameBtn");
 
     let cells = Array(9).fill(null);
     let playerTurn = true;
     let gameOver = false;
 
-    function checkWinner(bd, sym) {
-      const winCombos = [
-        [0, 1, 2],
-        [3, 4, 5],
-        [6, 7, 8],
-        [0, 3, 6],
-        [1, 4, 7],
-        [2, 5, 8],
-        [0, 4, 8],
-        [2, 4, 6],
-      ];
-      return winCombos.some((combo) => combo.every((i) => bd[i] === sym));
+    // Регистрация и вход
+    document.getElementById("registerBtn").addEventListener("click", () => {
+      const email = emailEl.value.trim();
+      const password = passwordEl.value;
+      if (!email || !password) {
+        alert("Введите email и пароль");
+        return;
+      }
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(() => alert("Регистрация успешна"))
+        .catch(e => alert("Ошибка: " + e.message));
+    });
+
+    document.getElementById("loginBtn").addEventListener("click", () => {
+      const email = emailEl.value.trim();
+      const password = passwordEl.value;
+      if (!email || !password) {
+        alert("Введите email и пароль");
+        return;
+      }
+      auth.signInWithEmailAndPassword(email, password)
+        .catch(e => alert("Ошибка: " + e.message));
+    });
+
+    logoutBtn.addEventListener("click", () => {
+      auth.signOut();
+    });
+
+    function resetGame() {
+      cells.fill(null);
+      playerTurn = true;
+      gameOver = false;
+      statusEl.textContent = "Ход игрока";
+      renderBoard();
     }
 
-    // Бот ходит так, чтобы никогда не проиграть
+    function renderBoard() {
+      board.innerHTML = "";
+      for (let i = 0; i < 9; i++) {
+        const div = document.createElement("div");
+        div.className = "cell";
+        div.textContent = cells[i] || "";
+        div.addEventListener("click", () => {
+          if (gameOver || !playerTurn || cells[i]) return;
+          cells[i] = "X";
+          playerTurn = false;
+          renderBoard();
+          if (checkWinner(cells, "X")) {
+            statusEl.textContent = "Вы выиграли!";
+            updateStatsAfterGame("wins");
+            gameOver = true;
+            return;
+          }
+          if (!cells.includes(null)) {
+            statusEl.textContent = "Ничья";
+            updateStatsAfterGame("draws");
+            gameOver = true;
+            return;
+          }
+          setTimeout(() => {
+            botTurn();
+          }, 400);
+        });
+        board.appendChild(div);
+      }
+    }
+
+    function checkWinner(board, symbol) {
+      const winCombos = [
+        [0,1,2],[3,4,5],[6,7,8],
+        [0,3,6],[1,4,7],[2,5,8],
+        [0,4,8],[2,4,6]
+      ];
+      return winCombos.some(combo => combo.every(i => board[i] === symbol));
+    }
+
+    function botTurn() {
+      if (gameOver) return;
+      const move = botMove();
+      cells[move] = "O";
+      renderBoard();
+      if (checkWinner(cells, "O")) {
+        statusEl.textContent = "Бот победил!";
+        updateStatsAfterGame("losses");
+        gameOver = true;
+        return;
+      }
+      if (!cells.includes(null)) {
+        statusEl.textContent = "Ничья";
+        updateStatsAfterGame("draws");
+        gameOver = true;
+        return;
+      }
+      playerTurn = true;
+      statusEl.textContent = "Ход игрока";
+    }
+
     function botMove() {
-      // 1. Победа
+      // Бот не проигрывает: сначала выиграть, если нельзя — заблокировать, иначе случайный ход
       for (let i = 0; i < 9; i++) {
         if (!cells[i]) {
           cells[i] = "O";
@@ -224,7 +270,6 @@
           cells[i] = null;
         }
       }
-      // 2. Блокировка игрока
       for (let i = 0; i < 9; i++) {
         if (!cells[i]) {
           cells[i] = "X";
@@ -235,212 +280,86 @@
           cells[i] = null;
         }
       }
-      // 3. Центр
-      if (!cells[4]) {
-        cells[4] = "O";
-        return 4;
-      }
-      // 4. Углы
-      const corners = [0, 2, 6, 8];
-      for (const i of corners) {
-        if (!cells[i]) {
-          cells[i] = "O";
-          return i;
-        }
-      }
-      // 5. Остальные
-      for (let i = 0; i < 9; i++) {
-        if (!cells[i]) {
-          cells[i] = "O";
-          return i;
-        }
-      }
+      const empty = cells.map((c,i) => c ? null : i).filter(x => x !== null);
+      const move = empty[Math.floor(Math.random() * empty.length)];
+      return move;
     }
 
-    function renderBoard() {
-      board.innerHTML = "";
-      for (let i = 0; i < 9; i++) {
-        const div = document.createElement("div");
-        div.className = "cell";
-        div.innerText = cells[i] || "";
-        div.addEventListener("click", () => {
-          if (gameOver || !playerTurn || cells[i]) return;
-          cells[i] = "X";
-          playerTurn = false;
-          renderBoard();
-          if (checkWinner(cells, "X")) {
-            setStatus("Вы выиграли!");
-            gameOver = true;
-            updateUserStats("wins");
-            updateGlobalStats("wins");
-            return;
-          }
-          if (!cells.includes(null)) {
-            setStatus("Ничья");
-            gameOver = true;
-            updateUserStats("draws");
-            updateGlobalStats("draws");
-            return;
-          }
-          const botIndex = botMove();
-          renderBoard();
-          if (checkWinner(cells, "O")) {
-            setStatus("Бот победил!");
-            gameOver = true;
-            updateUserStats("losses");
-            updateGlobalStats("losses");
-            return;
-          }
-          if (!cells.includes(null)) {
-            setStatus("Ничья");
-            gameOver = true;
-            updateUserStats("draws");
-            updateGlobalStats("draws");
-            return;
-          }
-          playerTurn = true;
-          setStatus("Ваш ход");
-        });
-        board.appendChild(div);
-      }
+    // Обновление статистики в Firestore
+    function updateStatsAfterGame(field) {
+      const user = auth.currentUser;
+      if (!user) return;
+      // Обновляем личную статистику
+      db.collection("stats").doc(user.uid).set({
+        wins: 0,
+        losses: 0,
+        draws: 0
+      }, { merge: true }).then(() => {
+        return db.collection("stats").doc(user.uid).get();
+      }).then(doc => {
+        let data = doc.data();
+        data[field] = (data[field] || 0) + 1;
+        return db.collection("stats").doc(user.uid).set(data);
+      }).then(() => {
+        loadStats();
+      }).catch(console.error);
+
+      // Обновляем общую статистику (бот — проигрыши считаются поражениями для бота)
+      db.collection("stats").doc("global").set({
+        wins: 0,
+        losses: 0,
+        draws: 0
+      }, { merge: true }).then(() => {
+        return db.collection("stats").doc("global").get();
+      }).then(doc => {
+        let data = doc.data();
+        data[field] = (data[field] || 0) + 1;
+        return db.collection("stats").doc("global").set(data);
+      }).then(() => {
+        loadStats();
+      }).catch(console.error);
     }
 
-    function setStatus(text) {
-      statusEl.textContent = text;
+    function loadStats() {
+      const user = auth.currentUser;
+      if (!user) return;
+      // Личная статистика
+      db.collection("stats").doc(user.uid).get()
+        .then(doc => {
+          const data = doc.exists ? doc.data() : {};
+          userWinsEl.textContent = data.wins || 0;
+          userLossesEl.textContent = data.losses || 0;
+          userDrawsEl.textContent = data.draws || 0;
+        }).catch(console.error);
+
+      // Общая статистика
+      db.collection("stats").doc("global").get()
+        .then(doc => {
+          const data = doc.exists ? doc.data() : {};
+          allWinsEl.textContent = data.wins || 0;
+          allLossesEl.textContent = data.losses || 0;
+          allDrawsEl.textContent = data.draws || 0;
+        }).catch(console.error);
     }
 
-    function resetGame() {
-      cells.fill(null);
-      playerTurn = true;
-      gameOver = false;
-      setStatus("Ваш ход");
-      renderBoard();
-    }
-
-    newGameBtn.addEventListener("click", () => {
-      resetGame();
-    });
-
-    // Работа с Firebase статистикой
-
-    function updateUserStats(field) {
-      if (!currentUser) return;
-      const statsRef = db.ref("users/" + currentUser.uid + "/stats");
-      statsRef.transaction((stats) => {
-        if (stats == null) {
-          stats = { wins: 0, losses: 0, draws: 0 };
-        }
-        stats[field] = (stats[field] || 0) + 1;
-        return stats;
-      });
-    }
-
-    function updateGlobalStats(field) {
-      const globalRef = db.ref("globalStats");
-      globalRef.transaction((stats) => {
-        if (stats == null) {
-          stats = { wins: 0, losses: 0, draws: 0 };
-        }
-        stats[field] = (stats[field] || 0) + 1;
-        return stats;
-      });
-    }
-
-    function displayStats(userStats, globalStats) {
-      if (userStats) {
-        statsEl.innerHTML = `<br>
-          Побед: ${userStats.wins || 0}<br>
-          Поражений: ${userStats.losses || 0}<br>
-          Ничьих: ${userStats.draws || 0}`;
-      } else {
-        statsEl.innerHTML = `<br>Нет данных`;
-      }
-      if (globalStats) {
-        statsAllEl.innerHTML = `<br>
-          Побед: ${globalStats.wins || 0}<br>
-          Поражений: ${globalStats.losses || 0}<br>
-          Ничьих: ${globalStats.draws || 0}`;
-      } else {
-        statsAllEl.innerHTML = `<br>Нет данных`;
-      }
-    }
-
-    function listenStats(uid) {
-      if (!uid) {
-        displayStats(null, null);
-        return;
-      }
-      const userStatsRef = db.ref("users/" + uid + "/stats");
-      const globalStatsRef = db.ref("globalStats");
-
-      userStatsRef.on("value", (snapshot) => {
-        const userStats = snapshot.val();
-        db.ref("globalStats").once("value").then((snap) => {
-          displayStats(userStats, snap.val());
-        });
-      });
-
-      globalStatsRef.on("value", (snapshot) => {
-        const globalStats = snapshot.val();
-        db.ref("users/" + uid + "/stats").once("value").then((snap) => {
-          displayStats(snap.val(), globalStats);
-        });
-      });
-    }
-
-    // Аутентификация
-
-    function updateUI(user) {
+    auth.onAuthStateChanged(user => {
       if (user) {
-        currentUser = user;
-        userEl.textContent = user.email;
-        authPanel.style.display = "none";
-        logoutBtn.style.display = "block";
-        listenStats(user.uid);
+        userEl.textContent = "Вы вошли как: " + user.email;
+        logoutBtn.style.display = "inline-block";
+        loadStats();
       } else {
-        currentUser = null;
         userEl.textContent = "";
-        authPanel.style.display = "flex";
         logoutBtn.style.display = "none";
-        displayStats(null, null);
+        userWinsEl.textContent = 0;
+        userLossesEl.textContent = 0;
+        userDrawsEl.textContent = 0;
+        allWinsEl.textContent = 0;
+        allLossesEl.textContent = 0;
+        allDrawsEl.textContent = 0;
       }
-    }
-
-    auth.onAuthStateChanged((user) => {
-      updateUI(user);
       resetGame();
     });
 
-    document.getElementById("registerBtn").addEventListener("click", () => {
-      const email = emailEl.value.trim();
-      const password = passwordEl.value;
-      if (!email || !password) {
-        alert("Введите email и пароль");
-        return;
-      }
-      auth
-        .createUserWithEmailAndPassword(email, password)
-        .then(() => alert("Регистрация успешна"))
-        .catch((e) => alert("Ошибка: " + e.message));
-    });
-
-    document.getElementById("loginBtn").addEventListener("click", () => {
-      const email = emailEl.value.trim();
-      const password = passwordEl.value;
-      if (!email || !password) {
-        alert("Введите email и пароль");
-        return;
-      }
-      auth
-        .signInWithEmailAndPassword(email, password)
-        .catch((e) => alert("Ошибка: " + e.message));
-    });
-
-    logoutBtn.addEventListener("click", () => {
-      auth.signOut();
-    });
-
-    // Запуск
     resetGame();
   </script>
 </body>
