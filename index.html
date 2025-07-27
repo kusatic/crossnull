@@ -1,19 +1,18 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Крестики-нолики</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Крестики-нолики + Firebase</title>
   <style>
     body {
-      margin: 0;
       background-color: #0d1117;
       color: #c9d1d9;
-      font-family: sans-serif;
+      font-family: Arial, sans-serif;
       text-align: center;
+      padding: 20px;
     }
-    h1 { margin-top: 20px; }
-    .board {
+    #board {
       display: grid;
       grid-template-columns: repeat(3, 100px);
       grid-gap: 5px;
@@ -23,226 +22,166 @@
     .cell {
       width: 100px;
       height: 100px;
-      background: #161b22;
-      color: #fff;
-      font-size: 60px;
+      background-color: #161b22;
+      border: 1px solid #30363d;
+      font-size: 2em;
+      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      cursor: pointer;
-      border: 1px solid #30363d;
     }
-    .cell:hover { background: #21262d; }
-    #auth {
-      margin-top: 20px;
+    .cell:hover {
+      background-color: #21262d;
     }
-    input {
-      background: #0d1117;
-      border: 1px solid #30363d;
-      color: #c9d1d9;
-      padding: 5px;
-      margin: 5px;
+    #login-form {
+      margin-bottom: 20px;
     }
     button {
-      background: #238636;
+      background-color: #238636;
       color: white;
-      padding: 5px 10px;
       border: none;
-      cursor: pointer;
+      padding: 10px;
       margin: 5px;
+      cursor: pointer;
     }
-    #stats {
-      margin-top: 20px;
+    button:hover {
+      background-color: #2ea043;
     }
   </style>
 </head>
 <body>
-  <h1>Крестики-нолики (Firebase)</h1>
+  <h1>Крестики-нолики + Firebase</h1>
 
-  <div id="auth">
-    <div id="user-form">
-      <input type="email" id="email" placeholder="Email">
-      <input type="password" id="password" placeholder="Пароль">
-      <button onclick="register()">Регистрация</button>
-      <button onclick="login()">Войти</button>
-    </div>
-    <div id="user-info" style="display:none;">
-      👤 <span id="user-email"></span>
-      <button onclick="logout()">Выйти</button>
-    </div>
+  <div id="login-form">
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Пароль">
+    <button onclick="register()">Регистрация</button>
+    <button onclick="login()">Войти</button>
+    <button onclick="logout()">Выйти</button>
   </div>
 
-  <div id="stats" style="display:none;">
-    <h3>Ваша статистика:</h3>
-    Побед: <span id="wins">0</span> |
-    Поражений: <span id="losses">0</span>
-  </div>
+  <div id="user-info"></div>
+  <h2 id="status"></h2>
+  <div id="board"></div>
 
-  <div class="board" id="board"></div>
-  <p id="status"></p>
-
-  <!-- Firebase SDK -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
+  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyB44W1CnyyftFFxskgbhFvtCuOvBVN6Xyk",
       authDomain: "crossnull-cc1c8.firebaseapp.com",
       projectId: "crossnull-cc1c8",
-      storageBucket: "crossnull-cc1c8.firebasestorage.app",
+      storageBucket: "crossnull-cc1c8.appspot.com",
       messagingSenderId: "504007695287",
       appId: "1:504007695287:web:1e30750b9518070adfa632"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-    const boardEl = document.getElementById('board');
-    const statusEl = document.getElementById('status');
-    let board = ["", "", "", "", "", "", "", "", ""];
-    let currentUser = null;
+    let board = Array(9).fill("");
+    let user = null;
+
+    const cells = [];
 
     function renderBoard() {
+      const boardEl = document.getElementById("board");
       boardEl.innerHTML = "";
-      board.forEach((cell, i) => {
-        const div = document.createElement('div');
-        div.className = 'cell';
-        div.innerText = cell;
-        div.onclick = () => handleMove(i);
-        boardEl.appendChild(div);
-      });
-    }
-
-    function handleMove(index) {
-      if (board[index] !== "" || checkWinner(board)) return;
-      board[index] = "X";
-      if (checkWinner(board)) {
-        statusEl.innerText = "Вы победили!";
-        updateStats("win");
-        return renderBoard();
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        cell.innerText = board[i];
+        cell.onclick = () => playerMove(i);
+        boardEl.appendChild(cell);
+        cells[i] = cell;
       }
-      if (board.every(cell => cell !== "")) {
-        statusEl.innerText = "Ничья!";
-        return renderBoard();
-      }
-      botMove();
-      if (checkWinner(board)) {
-        statusEl.innerText = "Бот победил!";
-        updateStats("loss");
-      }
-      renderBoard();
-    }
-
-    function botMove() {
-      let move = bestMove([...board]);
-      if (move !== undefined) board[move] = "O";
-    }
-
-    function bestMove(b) {
-      const winPatterns = [
-        [0,1,2],[3,4,5],[6,7,8],
-        [0,3,6],[1,4,7],[2,5,8],
-        [0,4,8],[2,4,6]
-      ];
-      for (let p of winPatterns) {
-        const [a,b1,c] = p;
-        if (b[a] === "O" && b[b1] === "O" && b[c] === "") return c;
-        if (b[a] === "O" && b[c] === "O" && b[b1] === "") return b1;
-        if (b[b1] === "O" && b[c] === "O" && b[a] === "") return a;
-      }
-      for (let p of winPatterns) {
-        const [a,b1,c] = p;
-        if (b[a] === "X" && b[b1] === "X" && b[c] === "") return c;
-        if (b[a] === "X" && b[c] === "X" && b[b1] === "") return b1;
-        if (b[b1] === "X" && b[c] === "X" && b[a] === "") return a;
-      }
-      return b.findIndex(cell => cell === "");
     }
 
     function checkWinner(b) {
-      const winPatterns = [
+      const win = [
         [0,1,2],[3,4,5],[6,7,8],
         [0,3,6],[1,4,7],[2,5,8],
         [0,4,8],[2,4,6]
       ];
-      return winPatterns.some(([a,b1,c]) =>
-        b[a] && b[a] === b[b1] && b[a] === b[c]
-      );
+      for (let [a,b1,c] of win) {
+        if (b[a] && b[a] === b[b1] && b[a] === b[c]) return b[a];
+      }
+      return b.includes("") ? null : "draw";
+    }
+
+    function playerMove(i) {
+      if (!user || board[i]) return;
+      board[i] = "X";
+      renderBoard();
+      let res = checkWinner(board);
+      if (res) return endGame(res);
+      setTimeout(botMove, 300);
+    }
+
+    function botMove() {
+      // Simple unbeatable bot: center > win > block > random
+      const empty = board.map((v,i) => v === "" ? i : null).filter(x => x !== null);
+      let best = empty.find(i => {
+        let test = [...board]; test[i] = "O";
+        return checkWinner(test) === "O";
+      }) || empty.find(i => {
+        let test = [...board]; test[i] = "X";
+        return checkWinner(test) === "X";
+      }) || (board[4] === "" ? 4 : null) || empty[Math.floor(Math.random()*empty.length)];
+      board[best] = "O";
+      renderBoard();
+      let res = checkWinner(board);
+      if (res) return endGame(res);
+    }
+
+    function endGame(result) {
+      let msg = result === "draw" ? "Ничья!" : (result === "X" ? "Вы выиграли!" : "Вы проиграли!");
+      document.getElementById("status").innerText = msg;
+      if (user) {
+        const ref = db.collection("stats").doc(user.uid);
+        ref.get().then(doc => {
+          let data = doc.exists ? doc.data() : { win: 0, lose: 0, draw: 0 };
+          if (result === "X") data.win++;
+          else if (result === "O") data.lose++;
+          else data.draw++;
+          ref.set(data);
+        });
+      }
     }
 
     function resetGame() {
-      board = ["", "", "", "", "", "", "", "", ""];
-      statusEl.innerText = "";
+      board = Array(9).fill("");
+      document.getElementById("status").innerText = "";
       renderBoard();
     }
 
-    async function updateStats(result) {
-      if (!currentUser) return;
-      const ref = doc(db, "users", currentUser.uid);
-      const snap = await getDoc(ref);
-      if (!snap.exists()) return;
-      let data = snap.data();
-      data.wins = data.wins || 0;
-      data.losses = data.losses || 0;
-      if (result === "win") data.wins += 1;
-      if (result === "loss") data.losses += 1;
-      await updateDoc(ref, data);
-      document.getElementById("wins").innerText = data.wins;
-      document.getElementById("losses").innerText = data.losses;
-    }
-
-    async function login() {
+    function register() {
       const email = document.getElementById("email").value;
       const pass = document.getElementById("password").value;
-      try {
-        await signInWithEmailAndPassword(auth, email, pass);
-      } catch (e) {
-        alert("Ошибка входа: " + e.message);
-      }
+      auth.createUserWithEmailAndPassword(email, pass).catch(alert);
     }
 
-    async function register() {
+    function login() {
       const email = document.getElementById("email").value;
       const pass = document.getElementById("password").value;
-      try {
-        const cred = await createUserWithEmailAndPassword(auth, email, pass);
-        await setDoc(doc(db, "users", cred.user.uid), {
-          email: email,
-          wins: 0,
-          losses: 0
-        });
-      } catch (e) {
-        alert("Ошибка регистрации: " + e.message);
-      }
+      auth.signInWithEmailAndPassword(email, pass).catch(alert);
     }
 
-    async function logout() {
-      await signOut(auth);
+    function logout() {
+      auth.signOut();
     }
 
-    onAuthStateChanged(auth, async (user) => {
-      currentUser = user;
-      if (user) {
-        document.getElementById("user-form").style.display = "none";
-        document.getElementById("user-info").style.display = "block";
-        document.getElementById("stats").style.display = "block";
-        document.getElementById("user-email").innerText = user.email;
-        const ref = doc(db, "users", user.uid);
-        const snap = await getDoc(ref);
-        if (snap.exists()) {
-          const data = snap.data();
-          document.getElementById("wins").innerText = data.wins;
-          document.getElementById("losses").innerText = data.losses;
-        }
+    auth.onAuthStateChanged(u => {
+      user = u;
+      const info = document.getElementById("user-info");
+      if (u) {
+        info.innerText = `Вы вошли как ${u.email}`;
+        resetGame();
       } else {
-        document.getElementById("user-form").style.display = "block";
-        document.getElementById("user-info").style.display = "none";
-        document.getElementById("stats").style.display = "none";
+        info.innerText = "Вы не авторизованы";
       }
-      resetGame();
     });
 
     renderBoard();
