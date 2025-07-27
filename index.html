@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Крестики-нолики с Firebase и идеальным ботом</title>
+  <title>Крестики-нолики с идеальным ботом</title>
   <style>
     body {
       background-color: #0d1117;
@@ -25,22 +25,25 @@
       max-width: 900px;
       margin: 0 auto;
     }
-    #statsPanel {
+    #statsAllPanel {
       flex: 1 1 200px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
       background: #161b22;
       padding: 15px;
       border-radius: 8px;
       min-width: 200px;
+      height: fit-content;
+    }
+    #rightPanel {
+      flex: 1 1 250px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      min-width: 250px;
     }
     #loginPanel {
-      flex: 1 1 250px;
       background: #161b22;
       padding: 15px;
       border-radius: 8px;
-      min-width: 250px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -59,6 +62,12 @@
     #logoutBtn {
       margin-top: 10px;
       width: 100%;
+    }
+    #statsUserPanel {
+      background: #161b22;
+      padding: 15px;
+      border-radius: 8px;
+      min-height: 120px;
     }
     #gamePanel {
       flex: 2 1 400px;
@@ -110,9 +119,9 @@
   <h1>Крестики-нолики с идеальным ботом</h1>
 
   <div id="container">
-    <div id="statsPanel">
-      <div id="stats"><strong>Ваша статистика:</strong><br>Загрузка...</div>
-      <div id="statsAll"><strong>Общая статистика:</strong><br>Загрузка...</div>
+    <div id="statsAllPanel">
+      <strong>Общая статистика:</strong>
+      <div id="statsAll">Загрузка...</div>
     </div>
 
     <div id="gamePanel">
@@ -121,25 +130,32 @@
       <div id="status">Ваш ход</div>
     </div>
 
-    <div id="loginPanel">
-      <div id="authPanel">
-        <input
-          type="email"
-          id="email"
-          placeholder="Email"
-          autocomplete="username"
-        />
-        <input
-          type="password"
-          id="password"
-          placeholder="Пароль"
-          autocomplete="current-password"
-        />
-        <button id="registerBtn">Регистрация</button>
-        <button id="loginBtn">Вход</button>
+    <div id="rightPanel">
+      <div id="loginPanel">
+        <div id="authPanel">
+          <input
+            type="email"
+            id="email"
+            placeholder="Email"
+            autocomplete="username"
+          />
+          <input
+            type="password"
+            id="password"
+            placeholder="Пароль"
+            autocomplete="current-password"
+          />
+          <button id="registerBtn">Регистрация</button>
+          <button id="loginBtn">Вход</button>
+        </div>
+        <button id="logoutBtn" style="display: none">Выход</button>
+        <div id="user" style="margin-top: 15px; color: #58a6ff"></div>
       </div>
-      <button id="logoutBtn" style="display: none">Выход</button>
-      <div id="user" style="margin-top: 15px; color: #58a6ff"></div>
+
+      <div id="statsUserPanel">
+        <strong>Ваша статистика:</strong>
+        <div id="stats">Загрузка...</div>
+      </div>
     </div>
   </div>
 
@@ -332,20 +348,20 @@
 
     function displayStats(userStats, globalStats) {
       if (userStats) {
-        statsEl.innerHTML = `<strong>Ваша статистика:</strong><br>
+        statsEl.innerHTML = `<br>
           Побед: ${userStats.wins || 0}<br>
           Поражений: ${userStats.losses || 0}<br>
           Ничьих: ${userStats.draws || 0}`;
       } else {
-        statsEl.innerHTML = `<strong>Ваша статистика:</strong><br>Нет данных`;
+        statsEl.innerHTML = `<br>Нет данных`;
       }
       if (globalStats) {
-        statsAllEl.innerHTML = `<strong>Общая статистика:</strong><br>
+        statsAllEl.innerHTML = `<br>
           Побед: ${globalStats.wins || 0}<br>
           Поражений: ${globalStats.losses || 0}<br>
           Ничьих: ${globalStats.draws || 0}`;
       } else {
-        statsAllEl.innerHTML = `<strong>Общая статистика:</strong><br>Нет данных`;
+        statsAllEl.innerHTML = `<br>Нет данных`;
       }
     }
 
