@@ -45,8 +45,9 @@
       border: 1px solid #30363d;
       cursor: pointer;
     }
-    input::placeholder {
-      color: #8b949e;
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
     #status {
       margin: 10px;
@@ -56,35 +57,36 @@
     #authPanel.hidden {
       display: none;
     }
-    #logoutBtn {
-      margin-top: 10px;
-    }
     #stats {
-      margin-top: 15px;
-      font-size: 16px;
-      color: #8b949e;
-      min-height: 22px;
+      margin: 10px 0;
+      font-size: 18px;
+      font-weight: bold;
+      color: #39d353;
     }
   </style>
 </head>
 <body>
   <h1>Крестики-нолики</h1>
+
   <div id="authPanel">
     <input type="email" id="email" placeholder="Email" />
     <input type="password" id="password" placeholder="Пароль" />
     <button id="registerBtn">Регистрация</button>
     <button id="loginBtn">Вход</button>
   </div>
+
   <button id="logoutBtn" style="display:none;">Выход</button>
   <div id="user"></div>
   <div id="stats"></div>
   <div id="board"></div>
+  <button id="newGameBtn" disabled>Новая игра</button>
   <div id="status">Ход игрока</div>
-  <button id="newGameBtn" style="display:none; margin-top: 15px;">Новая игра</button>
 
+  <!-- Firebase scripts -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyB44W1CnyyftFFxskgbhFvtCuOvBVN6Xyk",
@@ -92,7 +94,7 @@
       projectId: "crossnull-cc1c8",
       storageBucket: "crossnull-cc1c8.appspot.com",
       messagingSenderId: "504007695287",
-      appId: "1:504007695287:web:1e30750b9518070adfa632",
+      appId: "1:504007695287:web:1e30750b9518070adfa632"
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
@@ -112,6 +114,141 @@
     let playerTurn = true;
     let gameOver = false;
 
+    function renderBoard() {
+      board.innerHTML = "";
+      for (let i = 0; i < 9; i++) {
+        const div = document.createElement("div");
+        div.className = "cell";
+        div.innerText = cells[i] || "";
+        div.addEventListener("click", () => {
+          if (!cells[i] && playerTurn && !gameOver) {
+            cells[i] = "X";
+            playerTurn = false;
+            renderBoard();
+            if (checkWinner(cells, "X")) {
+              setStatus("Вы выиграли!");
+              updateStat(auth.currentUser.uid, "wins");
+              gameOver = true;
+              newGameBtn.disabled = false;
+              return;
+            }
+            if (!cells.includes(null)) {
+              setStatus("Ничья");
+              updateStat(auth.currentUser.uid, "draws");
+              gameOver = true;
+              newGameBtn.disabled = false;
+              return;
+            }
+            setTimeout(() => {
+              botMove();
+              renderBoard();
+              if (checkWinner(cells, "O")) {
+                setStatus("Бот победил!");
+                updateStat(auth.currentUser.uid, "losses");
+                gameOver = true;
+                newGameBtn.disabled = false;
+                return;
+              }
+              if (!cells.includes(null)) {
+                setStatus("Ничья");
+                updateStat(auth.currentUser.uid, "draws");
+                gameOver = true;
+                newGameBtn.disabled = false;
+                return;
+              }
+              playerTurn = true;
+              setStatus("Ход игрока");
+            }, 300);
+          }
+        });
+        board.appendChild(div);
+      }
+    }
+
+    function checkWinner(board, symbol) {
+      const winCombos = [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8],
+        [0, 3, 6],
+        [1, 4, 7],
+        [2, 5, 8],
+        [0, 4, 8],
+        [2, 4, 6]
+      ];
+      return winCombos.some((combo) => combo.every((i) => board[i] === symbol));
+    }
+
+    function botMove() {
+      // Игра бота с простым ИИ (неплохо защищается и пытается выиграть)
+      // Попытка выиграть
+      for (let i = 0; i < 9; i++) {
+        if (!cells[i]) {
+          cells[i] = "O";
+          if (checkWinner(cells, "O")) return;
+          cells[i] = null;
+        }
+      }
+      // Блокировка игрока
+      for (let i = 0; i < 9; i++) {
+        if (!cells[i]) {
+          cells[i] = "X";
+          if (checkWinner(cells, "X")) {
+            cells[i] = "O";
+            return;
+          }
+          cells[i] = null;
+        }
+      }
+      // Случайный ход
+      const empty = cells.map((c, i) => (c ? null : i)).filter((x) => x !== null);
+      const move = empty[Math.floor(Math.random() * empty.length)];
+      cells[move] = "O";
+    }
+
+    function setStatus(text) {
+      statusEl.innerText = text;
+      if (auth.currentUser) updateStats(auth.currentUser.uid);
+    }
+
+    function updateStats(uid) {
+      db.collection("stats")
+        .doc(uid)
+        .get()
+        .then((doc) => {
+          if (doc.exists) {
+            const { wins = 0, losses = 0, draws = 0 } = doc.data();
+            statsEl.innerText = `Победы: ${wins} | Поражения: ${losses} | Ничьи: ${draws}`;
+          } else {
+            statsEl.innerText = "Статистика отсутствует";
+          }
+        })
+        .catch(() => {
+          statsEl.innerText = "Ошибка загрузки статистики";
+        });
+    }
+
+    function updateStat(uid, field) {
+      db.collection("stats")
+        .doc(uid)
+        .set(
+          {
+            [field]: firebase.firestore.FieldValue.increment(1)
+          },
+          { merge: true }
+        )
+        .then(() => updateStats(uid));
+    }
+
+    newGameBtn.addEventListener("click", () => {
+      cells = Array(9).fill(null);
+      playerTurn = true;
+      gameOver = false;
+      renderBoard();
+      setStatus("Ход игрока");
+      newGameBtn.disabled = true;
+    });
+
     document.getElementById("registerBtn").addEventListener("click", () => {
       auth
         .createUserWithEmailAndPassword(emailEl.value, passwordEl.value)
@@ -127,151 +264,30 @@
 
     logoutBtn.addEventListener("click", () => auth.signOut());
 
-    newGameBtn.addEventListener("click", () => {
-      resetGame();
-      newGameBtn.style.display = "none";
-      setStatus("Ход игрока");
-    });
-
-    function updateStats(uid) {
-      db.collection("stats")
-        .doc(uid)
-        .get()
-        .then((doc) => {
-          if (doc.exists) {
-            const { wins, losses, draws } = doc.data();
-            statsEl.innerText = `Победы: ${wins}, Поражения: ${losses}, Ничьи: ${draws}`;
-          } else {
-            statsEl.innerText = "";
-          }
-        });
-    }
-
-    function updateStat(uid, field) {
-      return db.collection("stats").doc(uid).update({ [field]: firebase.firestore.FieldValue.increment(1) });
-    }
-
     auth.onAuthStateChanged((user) => {
       if (user) {
         userEl.innerText = `Вы вошли как ${user.email}`;
         authPanel.classList.add("hidden");
         logoutBtn.style.display = "inline-block";
+        newGameBtn.disabled = false;
         updateStats(user.uid);
       } else {
         userEl.innerText = "Вы не вошли";
         authPanel.classList.remove("hidden");
         logoutBtn.style.display = "none";
         statsEl.innerText = "";
+        newGameBtn.disabled = true;
+        cells = Array(9).fill(null);
+        renderBoard();
+        setStatus("Ход игрока");
+        gameOver = false;
       }
-      resetGame();
-      newGameBtn.style.display = "none";
-      setStatus("Ход игрока");
     });
 
-    function checkWinner(board, symbol) {
-      const winCombos = [
-        [0, 1, 2],
-        [3, 4, 5],
-        [6, 7, 8],
-        [0, 3, 6],
-        [1, 4, 7],
-        [2, 5, 8],
-        [0, 4, 8],
-        [2, 4, 6],
-      ];
-      return winCombos.some((combo) => combo.every((i) => board[i] === symbol));
-    }
-
-    function botMove() {
-      for (let i = 0; i < 9; i++) {
-        if (!cells[i]) {
-          cells[i] = "O";
-          if (checkWinner(cells, "O")) return i;
-          cells[i] = null;
-        }
-      }
-      for (let i = 0; i < 9; i++) {
-        if (!cells[i]) {
-          cells[i] = "X";
-          if (checkWinner(cells, "X")) {
-            cells[i] = "O";
-            return i;
-          }
-          cells[i] = null;
-        }
-      }
-      const empty = cells.map((c, i) => (c ? null : i)).filter((x) => x !== null);
-      const move = empty[Math.floor(Math.random() * empty.length)];
-      cells[move] = "O";
-      return move;
-    }
-
-    function renderBoard() {
-      board.innerHTML = "";
-      for (let i = 0; i < 9; i++) {
-        const div = document.createElement("div");
-        div.className = "cell";
-        div.innerText = cells[i] || "";
-        if (!gameOver) {
-          div.style.cursor = cells[i] ? "default" : "pointer";
-          div.addEventListener("click", () => {
-            if (!cells[i] && playerTurn && !gameOver) {
-              cells[i] = "X";
-              playerTurn = false;
-              renderBoard();
-              if (checkWinner(cells, "X")) {
-                gameOver = true;
-                setStatus("Вы выиграли!");
-                if (auth.currentUser) updateStat(auth.currentUser.uid, "wins").then(() => updateStats(auth.currentUser.uid));
-                newGameBtn.style.display = "inline-block";
-                return;
-              }
-              if (!cells.includes(null)) {
-                gameOver = true;
-                setStatus("Ничья");
-                if (auth.currentUser) updateStat(auth.currentUser.uid, "draws").then(() => updateStats(auth.currentUser.uid));
-                newGameBtn.style.display = "inline-block";
-                return;
-              }
-              botMove();
-              renderBoard();
-              if (checkWinner(cells, "O")) {
-                gameOver = true;
-                setStatus("Бот победил!");
-                if (auth.currentUser) updateStat(auth.currentUser.uid, "losses").then(() => updateStats(auth.currentUser.uid));
-                newGameBtn.style.display = "inline-block";
-                return;
-              }
-              if (!cells.includes(null)) {
-                gameOver = true;
-                setStatus("Ничья");
-                if (auth.currentUser) updateStat(auth.currentUser.uid, "draws").then(() => updateStats(auth.currentUser.uid));
-                newGameBtn.style.display = "inline-block";
-                return;
-              }
-              playerTurn = true;
-            }
-          });
-        } else {
-          div.style.cursor = "default";
-        }
-        board.appendChild(div);
-      }
-    }
-
-    function resetGame() {
-      cells = Array(9).fill(null);
-      playerTurn = true;
-      gameOver = false;
-      renderBoard();
-    }
-
-    function setStatus(text) {
-      statusEl.innerText = text;
-    }
-
-    // Инициализация доски
-    resetGame();
+    // Запуск
+    renderBoard();
+    setStatus("Ход игрока");
+    newGameBtn.disabled = true;
   </script>
 </body>
 </html>
